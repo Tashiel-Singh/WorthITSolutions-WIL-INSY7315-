@@ -148,3 +148,20 @@ The prototype stores user sessions, inventory counts, orders, invoices, and them
 ## License
 
 This project is developed for academic evaluation under the INSY7315 Work Integrated Learning module. Proprietary to WorthIT Solutions and Rolling Stoned Natural Health (Pty) Ltd.
+
+## Live deployment
+- Frontend: https://medflow-web-wil26sc.onrender.com
+- API: https://medflow-api-wil26sc.onrender.com (health check: /health)
+
+## Documentation
+- [Hosting rationale](docs/hosting-rationale.md)
+- [Environment stability](docs/environment-stability.md)
+- [Deployment deviations](docs/deployment-deviations.md)
+- [Requirements alignment](docs/requirements-alignment.md)
+- [Presentation plan](docs/presentation/presentation-plan.md)
+- [Demo script](docs/presentation/demo-script.md)
+- [Troubleshooting](docs/troubleshooting.md)
+- [Slide deck](docs/presentation/MedFlow-Presentation.pptx)
+
+## Hosting
+Defined in render.yaml. Deployments run from GitHub Actions on merge to main.
