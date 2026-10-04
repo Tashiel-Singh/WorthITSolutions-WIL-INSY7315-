@@ -1,0 +1,18 @@
+name: Post-deploy smoke test
+on:
+  workflow_run:
+    workflows: ["Deploy API to Render"]
+    types: [completed]
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    steps:
+      - name: Wait for /health
+        run: |
+          for i in $(seq 1 30); do
+            code=$(curl -s -o /dev/null -w "%{http_code}" "https://${{ vars.API_HOST }}/health" || true)
+            if [ "$code" = "200" ]; then echo "healthy"; exit 0; fi
+            echo "attempt $i: status $code"; sleep 20
+          done
+          exit 1
