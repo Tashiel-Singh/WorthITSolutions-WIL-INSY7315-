@@ -1,0 +1,126 @@
+name: MedFlow Enterprise CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+      - staging
+      - develop
+  pull_request:
+    branches:
+      - main
+      - staging
+      - develop
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # =========================================================================
+  # JOB 1: Build, Lint & Automated Vitest Test Suite
+  # =========================================================================
+  build-and-test:
+    name: 🧪 Build & Automated Test Suite
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: ⚙️ Setup Node.js 20 Runtime
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: 📦 Install NPM Dependencies (Clean Install)
+        run: npm ci
+
+      - name: 🔍 Execute TypeScript Linter
+        run: npm run lint
+
+      - name: 🧪 Run Automated Vitest Component Tests
+        run: npm run test:ci
+
+      - name: 🏗️ Execute Production Build
+        run: npm run build
+
+      - name: 📤 Archive Production Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: medflow-production-dist
+          path: dist/
+          retention-days: 7
+          if-no-files-found: error
+
+  # =========================================================================
+  # JOB 2: Automated Multi-Environment Azure App Service Deployment
+  # =========================================================================
+  deploy-to-azure:
+    name: 🚀 Deploy to Azure App Service (${{ github.ref_name }})
+    needs: build-and-test
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/staging' || github.ref == 'refs/heads/main')
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: 📥 Download Build Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: medflow-production-dist
+          path: dist/
+
+      # ---------------------------------------------------------------------
+      # Environment: Development Slot (branch: develop)
+      # ---------------------------------------------------------------------
+      - name: 🌐 Deploy to Azure App Service - Development Slot
+        if: github.ref == 'refs/heads/develop'
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: 'medflow-app-dev'
+          slot-name: 'development'
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_DEV || secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          package: dist/
+
+      # ---------------------------------------------------------------------
+      # Environment: Staging Slot (branch: staging)
+      # ---------------------------------------------------------------------
+      - name: 🌐 Deploy to Azure App Service - Staging Slot
+        if: github.ref == 'refs/heads/staging'
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: 'medflow-app-staging'
+          slot-name: 'staging'
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_STAGING || secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          package: dist/
+
+      # ---------------------------------------------------------------------
+      # Environment: Production Slot with Zero-Downtime Swap (branch: main)
+      # ---------------------------------------------------------------------
+      - name: 🌐 Deploy to Azure App Service - Production Slot
+        if: github.ref == 'refs/heads/main'
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: 'medflow-app-prod'
+          slot-name: 'production'
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_PROD || secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          package: dist/
+
+      - name: 📋 Verify Deployment Health
+        run: |
+          echo "========================================================"
+          echo "MedFlow Deployment Completed Successfully"
+          echo "Environment Target : ${{ github.ref_name }}"
+          echo "Commit SHA         : ${{ github.sha }}"
+          echo "Author             : ${{ github.actor }}"
+          echo "Timestamp          : $(date -u)"
+          echo "========================================================"
