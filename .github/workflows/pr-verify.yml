@@ -1,0 +1,40 @@
+name: MedFlow Pull Request Quality Gate
+
+on:
+  pull_request:
+    branches:
+      - main
+      - staging
+      - develop
+
+concurrency:
+  group: pr-verify-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  pr-quality-check:
+    name: 🛡️ PR Lint, Typecheck & Vitest Quality Gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: 📥 Checkout Pull Request Branch
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: 📦 Clean Dependency Install
+        run: npm ci
+
+      - name: 🔍 TypeScript Strict Typecheck
+        run: npm run lint
+
+      - name: 🧪 Execute Vitest Component & Unit Tests
+        run: npm run test:ci
+
+      - name: 🏗️ Verify Production Bundle Build
+        run: npm run build
