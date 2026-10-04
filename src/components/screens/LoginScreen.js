@@ -155,12 +155,21 @@ export function renderLoginScreen() {
   const toggleBtn = container.querySelector('#btn-toggle-creds');
   const popover = container.querySelector('#creds-popover');
   if (toggleBtn && popover) {
+    const handleDocClick = (e) => {
+      if (!popover.contains(e.target) && !toggleBtn.contains(e.target)) {
+        popover.classList.remove('active');
+        document.removeEventListener('click', handleDocClick);
+      }
+    };
+
     toggleBtn.addEventListener('click', (e) => {
       e.stopPropagation();
-      popover.classList.toggle('active');
-    });
-    document.addEventListener('click', () => {
-      popover.classList.remove('active');
+      const isActive = popover.classList.toggle('active');
+      if (isActive) {
+        document.addEventListener('click', handleDocClick);
+      } else {
+        document.removeEventListener('click', handleDocClick);
+      }
     });
   }
 

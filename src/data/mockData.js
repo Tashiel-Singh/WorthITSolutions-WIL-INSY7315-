@@ -358,3 +358,61 @@ export const revenueMonthlyData = [
   { month: 'September 2026 (Est)', retailPercent: 44, bulkPercent: 56, totalGrowth: '+40%', retailRevenue: 72000, bulkRevenue: 91000 },
   { month: 'October 2026 (Target)', retailPercent: 42, bulkPercent: 58, totalGrowth: '+45%', retailRevenue: 78000, bulkRevenue: 107000 }
 ];
+
+export const revenueCategoryMonthlyData = {
+  Homeopathic: [
+    { month: 'May 2026', retailPercent: 60, bulkPercent: 40, totalGrowth: '+14%', retailRevenue: 30000, bulkRevenue: 20000 },
+    { month: 'June 2026', retailPercent: 57, bulkPercent: 43, totalGrowth: '+19%', retailRevenue: 34000, bulkRevenue: 26000 },
+    { month: 'July 2026', retailPercent: 55, bulkPercent: 45, totalGrowth: '+26%', retailRevenue: 38000, bulkRevenue: 31000 },
+    { month: 'August 2026', retailPercent: 54, bulkPercent: 46, totalGrowth: '+32%', retailRevenue: 42000, bulkRevenue: 36000 },
+    { month: 'September 2026 (Est)', retailPercent: 53, bulkPercent: 47, totalGrowth: '+38%', retailRevenue: 45000, bulkRevenue: 40000 },
+    { month: 'October 2026 (Target)', retailPercent: 51, bulkPercent: 49, totalGrowth: '+42%', retailRevenue: 48000, bulkRevenue: 46000 }
+  ],
+  Furniture: [
+    { month: 'May 2026', retailPercent: 43, bulkPercent: 57, totalGrowth: '+10%', retailRevenue: 18000, bulkRevenue: 24000 },
+    { month: 'June 2026', retailPercent: 40, bulkPercent: 60, totalGrowth: '+16%', retailRevenue: 20000, bulkRevenue: 30000 },
+    { month: 'July 2026', retailPercent: 37, bulkPercent: 63, totalGrowth: '+30%', retailRevenue: 23000, bulkRevenue: 38000 },
+    { month: 'August 2026', retailPercent: 35, bulkPercent: 65, totalGrowth: '+39%', retailRevenue: 26000, bulkRevenue: 47000 },
+    { month: 'September 2026 (Est)', retailPercent: 34, bulkPercent: 66, totalGrowth: '+43%', retailRevenue: 27000, bulkRevenue: 51000 },
+    { month: 'October 2026 (Target)', retailPercent: 32, bulkPercent: 68, totalGrowth: '+48%', retailRevenue: 30000, bulkRevenue: 61000 }
+  ]
+};
+
+export const initialTransferAuditLog = [
+  {
+    id: 'TRF-8012',
+    date: '2026-08-14 14:22',
+    productId: 'PRD-101',
+    productName: 'Arnica Montana 30C Pellets',
+    quantity: 24,
+    from: 'Bulk Reserve Pool',
+    to: 'Retail Store Pool',
+    operator: 'John Admin',
+    status: 'Verified & Logged',
+    notes: 'Walk-in OTC retail replenishment for weekend demand'
+  },
+  {
+    id: 'TRF-8009',
+    date: '2026-08-11 09:45',
+    productId: 'PRD-103',
+    productName: 'Calendula Natural Healing Ointment 50g',
+    quantity: 48,
+    from: 'Bulk Reserve Pool',
+    to: 'Retail Store Pool',
+    operator: 'John Admin',
+    status: 'Verified & Logged',
+    notes: 'Scheduled monthly retail shelf allocation'
+  },
+  {
+    id: 'TRF-8004',
+    date: '2026-08-05 16:10',
+    productId: 'PRD-203',
+    productName: 'Stainless Medical Utility Cart (3-Tier)',
+    quantity: 2,
+    from: 'Bulk Reserve Pool',
+    to: 'Retail Store Pool',
+    operator: 'John Admin',
+    status: 'Verified & Logged',
+    notes: 'Floor showroom display unit allocation'
+  }
+];

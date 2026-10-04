@@ -189,10 +189,13 @@ export function renderExecutiveDashboardScreen() {
   // Listeners
   container.querySelector('#btn-download-exec-report')?.addEventListener('click', () => {
     showToast(
-      'Executive Report Generated',
-      'Sprint 6 final PDF compilation generated (simulated export).',
-      'success'
+      'Exporting Executive Report',
+      'Opening print dialog to generate PDF report...',
+      'info'
     );
+    setTimeout(() => {
+      window.print();
+    }, 300);
   });
 
   container.querySelector('#btn-back-dashboard')?.addEventListener('click', () => {

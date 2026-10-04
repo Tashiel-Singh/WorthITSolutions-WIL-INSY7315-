@@ -1,6 +1,6 @@
 /**
  * Screen 8: Automated Invoicing
- * Caption: Figure 8: Automated Invoicing - VAT-compliant invoices generated in seconds.
+ * Caption: Figure 8: Automated Invoicing - VAT-compliant invoices generated in seconds with printable PDF support.
  */
 import { store } from '../../store/state.js';
 import { Icons } from '../common/Icons.js';
@@ -15,23 +15,27 @@ export function renderInvoicingScreen() {
   let invoice = invoices.find((i) => i.id === activeInvId) || invoices[0];
 
   const container = document.createElement('div');
-  container.className = 'page-content';
+  container.className = 'page-content printable-invoice-screen';
 
   function renderContent() {
+    // Financial Breakdown
+    const itemsGross = invoice.items.reduce((sum, item) => sum + (item.total || (item.qty * item.unitPrice)), 0);
+    const discountAmount = invoice.discountAmount || (itemsGross > invoice.subtotal ? (itemsGross - invoice.subtotal) : 0);
+
     container.innerHTML = `
-      <div class="page-header">
+      <div class="page-header no-print">
         <div class="page-title-group">
           <h1>Automated Tax-Compliant Invoicing</h1>
           <p>Instantaneous invoice rendering with isolated 15% VAT calculation and 30-day EFT settlement schedules.</p>
         </div>
         <div class="page-actions">
           <!-- Switch Active Invoice dropdown -->
-          <select id="select-invoice-switcher" class="form-select" style="min-width: 220px;">
+          <select id="select-invoice-switcher" class="form-select" style="min-width: 260px; font-weight: 600;">
             ${invoices
               .map(
                 (inv) =>
                   `<option value="${inv.id}" ${inv.id === invoice.id ? 'selected' : ''}>
-                    ${inv.id} (${inv.clientName.slice(0, 20)}...)
+                    ${inv.id} (${inv.clientName.slice(0, 22)}...)
                   </option>`
               )
               .join('')}
@@ -46,7 +50,7 @@ export function renderInvoicingScreen() {
       </div>
 
       <!-- Professional Printable Invoice Card -->
-      <div class="card" style="max-width: 960px; margin: 0 auto 2rem; padding: 2.5rem; box-shadow: var(--shadow-lg);">
+      <div class="card invoice-printable-card" style="max-width: 960px; margin: 0 auto 2rem; padding: 2.5rem; box-shadow: var(--shadow-lg);">
         <!-- Invoice Top Header -->
         <div style="display: flex; justify-content: space-between; align-items: flex-start; padding-bottom: 2rem; border-bottom: 2px solid var(--border-subtle); flex-wrap: wrap; gap: 1.5rem;">
           <div>
@@ -100,7 +104,7 @@ export function renderInvoicingScreen() {
             </div>
             <div style="display: flex; justify-content: space-between; font-size: 0.8125rem;">
               <span style="color: var(--text-muted);">Payment Due Date:</span>
-              <strong style="color: #2563eb; font-size: 0.95rem;">${invoice.dueDate} (30 Days)</strong>
+              <strong style="color: var(--color-primary); font-size: 0.95rem;">${invoice.dueDate} (30 Days)</strong>
             </div>
             <div style="display: flex; justify-content: space-between; font-size: 0.8125rem;">
               <span style="color: var(--text-muted);">Payment Method:</span>
@@ -139,7 +143,7 @@ export function renderInvoicingScreen() {
           </table>
         </div>
 
-        <!-- VAT Highlight Box & Totals Summary -->
+        <!-- VAT Highlight Box & Comprehensive Totals Summary -->
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; align-items: start;">
           <!-- EFT Banking Details Box -->
           <div style="padding: 1.25rem; background: var(--bg-surface-subtle); border-radius: var(--radius-md); border: 1px solid var(--border-subtle); font-size: 0.8125rem;">
@@ -157,10 +161,26 @@ export function renderInvoicingScreen() {
             </div>
           </div>
 
-          <!-- Total Calculation with VAT Highlight Box -->
+          <!-- Total Calculation with Full Breakdown -->
           <div style="display: flex; flex-direction: column; gap: 0.5rem; font-size: 0.875rem;">
-            <div style="display: flex; justify-content: space-between; padding: 0.35rem 0;">
-              <span style="color: var(--text-secondary);">Subtotal (Excl. VAT):</span>
+            <div style="display: flex; justify-content: space-between; padding: 0.25rem 0;">
+              <span style="color: var(--text-secondary);">Gross Items Subtotal:</span>
+              <strong style="color: var(--text-primary);">R ${itemsGross.toFixed(2)}</strong>
+            </div>
+
+            ${
+              discountAmount > 0
+                ? `
+              <div style="display: flex; justify-content: space-between; padding: 0.25rem 0; color: var(--status-success); font-weight: 600;">
+                <span>Volume Discount Tier (-15%):</span>
+                <span>- R ${discountAmount.toFixed(2)}</span>
+              </div>
+            `
+                : ''
+            }
+
+            <div style="display: flex; justify-content: space-between; padding: 0.25rem 0; border-top: 1px dashed var(--border-subtle);">
+              <span style="color: var(--text-secondary);">Net Subtotal (Excl. VAT):</span>
               <strong style="color: var(--text-primary);">R ${invoice.subtotal.toFixed(2)}</strong>
             </div>
 
@@ -168,7 +188,7 @@ export function renderInvoicingScreen() {
             <div style="padding: 0.85rem 1rem; background: var(--color-primary-bg); border: 1px solid var(--color-primary-border); border-radius: var(--radius-md); display: flex; justify-content: space-between; align-items: center;">
               <div>
                 <strong style="color: var(--color-primary);">Standard VAT Split (15%)</strong>
-                <div style="font-size: 0.72rem; color: var(--text-muted);">Qualifying input tax deduction item</div>
+                <div style="font-size: 0.72rem; color: var(--text-muted);">Qualifying input tax credit item</div>
               </div>
               <strong style="color: var(--color-primary); font-size: 1.05rem;">R ${invoice.vatAmount.toFixed(2)}</strong>
             </div>
@@ -180,14 +200,14 @@ export function renderInvoicingScreen() {
           </div>
         </div>
 
-        <!-- Action Footer -->
-        <div style="margin-top: 2.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border-subtle); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+        <!-- Action Footer (Hidden in print) -->
+        <div class="no-print" style="margin-top: 2.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border-subtle); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
           <div style="font-size: 0.75rem; color: var(--text-muted);">
             Generated by MedFlow Invoicing Engine • Developed by <strong>WorthIT Solutions</strong>
           </div>
           <div style="display: flex; gap: 0.75rem;">
             <button class="btn btn-secondary" id="btn-download-invoice-pdf">
-              ${Icons.records} Download PDF
+              ${Icons.records} Download / Print PDF
             </button>
             <button class="btn btn-primary" id="btn-send-invoice-email">
               ${Icons.bell} Send Invoice to Client
@@ -214,13 +234,16 @@ export function renderInvoicingScreen() {
       );
     });
 
-    // Download PDF Button
+    // Download PDF Button: Trigger native print-to-PDF
     container.querySelector('#btn-download-invoice-pdf')?.addEventListener('click', () => {
       showToast(
-        'PDF Exported',
-        `Generated official PDF for Tax Invoice ${invoice.id}.`,
+        'Generating PDF',
+        `Preparing official PDF export for Tax Invoice ${invoice.id}...`,
         'info'
       );
+      setTimeout(() => {
+        window.print();
+      }, 300);
     });
 
     container.querySelector('#btn-back-dashboard')?.addEventListener('click', () => {

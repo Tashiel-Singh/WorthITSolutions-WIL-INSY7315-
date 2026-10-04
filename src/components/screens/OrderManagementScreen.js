@@ -8,17 +8,15 @@ import { openModal } from '../common/Modal.js';
 import { showToast } from '../common/Toast.js';
 
 export function renderOrderManagementScreen() {
-  const state = store.getState();
-  let orders = [...state.orders];
-
   let selectedStatus = 'all';
   let searchTerm = '';
 
   const container = document.createElement('div');
   container.className = 'page-content';
 
-  function renderContent() {
-    let filtered = orders.filter((o) => {
+  function getFilteredOrders() {
+    const orders = store.getState().orders;
+    return orders.filter((o) => {
       const matchStatus = selectedStatus === 'all' || o.status === selectedStatus;
       const matchSearch =
         !searchTerm ||
@@ -26,158 +24,83 @@ export function renderOrderManagementScreen() {
         o.clientName.toLowerCase().includes(searchTerm.toLowerCase());
       return matchStatus && matchSearch;
     });
+  }
 
-    container.innerHTML = `
-      <div class="page-header">
-        <div class="page-title-group">
-          <h1>Centralized Order Management</h1>
-          <p>Real-time fulfillment tracking, dispatch status, and order lifecycle management.</p>
-        </div>
-        <div class="page-actions">
-          <button class="btn btn-primary" id="btn-create-order-s7">
-            ${Icons.plus} New Bulk Order
-          </button>
-          <button class="btn btn-secondary" id="btn-next-screen10">
-            Next: Payment Reminders →
-          </button>
-        </div>
-      </div>
+  function buildTableRowsHtml(filtered) {
+    if (filtered.length === 0) {
+      return `<tr><td colspan="7" style="text-align: center; padding: 3rem; color: var(--text-muted);">No orders match the selected filter.</td></tr>`;
+    }
 
-      <!-- Filters & Search Bar Card -->
-      <div class="card" style="margin-bottom: 1.5rem; padding: 1.25rem;">
-        <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
-          <!-- Search input -->
-          <div class="search-input-wrapper" style="flex: 1; min-width: 260px;">
-            <span class="search-icon-inside">${Icons.search}</span>
-            <input 
-              type="text" 
-              id="order-search-input" 
-              class="form-input search-input" 
-              placeholder="Search by order # (e.g. ORD-8041) or client clinic..." 
-              value="${searchTerm}"
-            />
+    return filtered
+      .map(
+        (ord) => `
+      <tr>
+        <td>
+          <strong style="color: var(--text-primary); font-family: var(--font-mono); font-size: 0.95rem;">${ord.id}</strong>
+          <div style="font-size: 0.72rem; color: var(--text-muted);">${ord.type}</div>
+        </td>
+        <td>
+          <div style="font-weight: 700; color: var(--text-primary); font-size: 0.92rem;">${ord.clientName}</div>
+          <span class="code-tag">${ord.clientId}</span>
+        </td>
+        <td>
+          <span style="color: var(--text-secondary); font-size: 0.8125rem;">${ord.orderDate}</span>
+        </td>
+        <td>
+          <span style="font-weight: 600; color: var(--text-primary);">${ord.items?.length || 2} Products</span>
+        </td>
+        <td>
+          <strong style="color: var(--color-primary); font-size: 1rem;">
+            R ${ord.totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+          </strong>
+        </td>
+        <td>
+          <span class="badge ${
+            ord.status === 'Delivered'
+              ? 'badge-success'
+              : ord.status === 'Shipped'
+              ? 'badge-info'
+              : ord.status === 'Processing'
+              ? 'badge-retail'
+              : 'badge-warning'
+          }">
+            <span class="badge-dot"></span>
+            ${ord.status}
+          </span>
+        </td>
+        <td style="text-align: right;">
+          <div style="display: inline-flex; gap: 0.4rem;">
+            <button class="btn btn-sm btn-secondary btn-view-order" data-id="${ord.id}" title="Inspect Order Details">
+              View
+            </button>
+            ${
+              ord.status !== 'Delivered' && ord.status !== 'Shipped'
+                ? `
+              <button class="btn btn-sm btn-primary btn-ship-order" data-id="${ord.id}">
+                Mark Shipped
+              </button>
+            `
+                : ''
+            }
+            <button class="btn btn-sm btn-secondary btn-goto-inv" data-id="${ord.id}" title="View Order Invoice">
+              Invoice →
+            </button>
           </div>
+        </td>
+      </tr>
+    `
+      )
+      .join('');
+  }
 
-          <!-- Status filter -->
-          <div style="min-width: 170px;">
-            <select id="order-status-filter" class="form-select">
-              <option value="all" ${selectedStatus === 'all' ? 'selected' : ''}>All Order Statuses</option>
-              <option value="Pending" ${selectedStatus === 'Pending' ? 'selected' : ''}>Pending (Awaiting Prep)</option>
-              <option value="Processing" ${selectedStatus === 'Processing' ? 'selected' : ''}>Processing (Warehouse)</option>
-              <option value="Shipped" ${selectedStatus === 'Shipped' ? 'selected' : ''}>Shipped (In Transit)</option>
-              <option value="Delivered" ${selectedStatus === 'Delivered' ? 'selected' : ''}>Delivered (Closed)</option>
-            </select>
-          </div>
-
-          <div style="font-size: 0.8125rem; color: var(--text-muted);">
-            Showing <strong>${filtered.length}</strong> of ${orders.length} orders
-          </div>
-        </div>
-      </div>
-
-      <!-- Orders Table -->
-      <div class="card" style="padding: 0;">
-        <div class="table-container">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>Order Number</th>
-                <th>Client Name & Channel</th>
-                <th>Order Date</th>
-                <th>Line Items Count</th>
-                <th>Total Value (Incl. VAT)</th>
-                <th>Status</th>
-                <th style="text-align: right;">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${
-                filtered.length === 0
-                  ? `<tr><td colspan="7" style="text-align: center; padding: 3rem; color: var(--text-muted);">No orders match the selected filter.</td></tr>`
-                  : filtered
-                      .map(
-                        (ord) => `
-                <tr>
-                  <td>
-                    <strong style="color: var(--text-primary); font-family: var(--font-mono); font-size: 0.95rem;">${ord.id}</strong>
-                    <div style="font-size: 0.72rem; color: var(--text-muted);">${ord.type}</div>
-                  </td>
-                  <td>
-                    <div style="font-weight: 700; color: var(--text-primary); font-size: 0.92rem;">${ord.clientName}</div>
-                    <span class="code-tag">${ord.clientId}</span>
-                  </td>
-                  <td>
-                    <span style="color: var(--text-secondary); font-size: 0.8125rem;">${ord.orderDate}</span>
-                  </td>
-                  <td>
-                    <span style="font-weight: 600; color: var(--text-primary);">${ord.items?.length || 2} Products</span>
-                  </td>
-                  <td>
-                    <strong style="color: var(--color-primary); font-size: 1rem;">
-                      R ${ord.totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                    </strong>
-                  </td>
-                  <td>
-                    <span class="badge ${
-                      ord.status === 'Delivered'
-                        ? 'badge-success'
-                        : ord.status === 'Shipped'
-                        ? 'badge-info'
-                        : ord.status === 'Processing'
-                        ? 'badge-retail'
-                        : 'badge-warning'
-                    }">
-                      <span class="badge-dot"></span>
-                      ${ord.status}
-                    </span>
-                  </td>
-                  <td style="text-align: right;">
-                    <div style="display: inline-flex; gap: 0.4rem;">
-                      <button class="btn btn-sm btn-secondary btn-view-order" data-id="${ord.id}" title="Inspect Order Details">
-                        View
-                      </button>
-                      ${
-                        ord.status !== 'Delivered' && ord.status !== 'Shipped'
-                          ? `
-                        <button class="btn btn-sm btn-primary btn-ship-order" data-id="${ord.id}">
-                          Mark Shipped
-                        </button>
-                      `
-                          : ''
-                      }
-                      <button class="btn btn-sm btn-secondary btn-goto-inv" data-id="${ord.id}" title="View Invoice">
-                        Invoice →
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              `
-                      )
-                      .join('')
-              }
-            </tbody>
-          </table>
-        </div>
-      </div>
-    `;
-
-    // Listeners
-    container.querySelector('#order-search-input')?.addEventListener('input', (e) => {
-      searchTerm = e.target.value;
-      renderContent();
-    });
-
-    container.querySelector('#order-status-filter')?.addEventListener('change', (e) => {
-      selectedStatus = e.target.value;
-      renderContent();
-    });
-
+  function attachRowListeners() {
     // Mark as shipped
     container.querySelectorAll('.btn-ship-order').forEach((btn) => {
       btn.addEventListener('click', () => {
         const id = btn.getAttribute('data-id');
         store.updateOrderStatus(id, 'Shipped');
         showToast('Status Updated', `Order ${id} marked as Shipped. Waybill generated.`, 'success');
+        updateTableOnly();
       });
     });
 
@@ -227,11 +150,123 @@ export function renderOrderManagementScreen() {
       });
     });
 
-    // Jump to invoice
+    // Jump to the exact invoice associated with this order!
     container.querySelectorAll('.btn-goto-inv').forEach((btn) => {
       btn.addEventListener('click', () => {
-        store.navigateTo('invoicing');
+        const orderId = btn.getAttribute('data-id');
+        const invoices = store.getState().invoices;
+        const matchingInvoice = invoices.find((i) => i.orderId === orderId);
+
+        if (matchingInvoice) {
+          store.navigateTo('invoicing', { invoiceId: matchingInvoice.id });
+        } else {
+          // If no invoice matching orderId found, navigate to invoicing with first invoice or create notice
+          showToast('Invoice Note', `Viewing tax invoice directory for ${orderId}`, 'info');
+          store.navigateTo('invoicing');
+        }
       });
+    });
+  }
+
+  function updateTableOnly() {
+    const tbody = container.querySelector('#orders-table-body');
+    const countEl = container.querySelector('#orders-count-display');
+    const filtered = getFilteredOrders();
+    const totalOrders = store.getState().orders.length;
+
+    if (tbody) {
+      tbody.innerHTML = buildTableRowsHtml(filtered);
+      attachRowListeners();
+    }
+    if (countEl) {
+      countEl.innerHTML = `Showing <strong>${filtered.length}</strong> of ${totalOrders} orders`;
+    }
+  }
+
+  function renderLayout() {
+    const orders = store.getState().orders;
+    const filtered = getFilteredOrders();
+
+    container.innerHTML = `
+      <div class="page-header">
+        <div class="page-title-group">
+          <h1>Centralized Order Management</h1>
+          <p>Real-time fulfillment tracking, dispatch status, and order lifecycle management.</p>
+        </div>
+        <div class="page-actions">
+          <button class="btn btn-primary" id="btn-create-order-s7">
+            ${Icons.plus} New Bulk Order
+          </button>
+          <button class="btn btn-secondary" id="btn-next-screen10">
+            Next: Payment Reminders →
+          </button>
+        </div>
+      </div>
+
+      <!-- Filters & Search Bar Card -->
+      <div class="card" style="margin-bottom: 1.5rem; padding: 1.25rem;">
+        <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+          <!-- Search input -->
+          <div class="search-input-wrapper" style="flex: 1; min-width: 260px;">
+            <span class="search-icon-inside">${Icons.search}</span>
+            <input 
+              type="text" 
+              id="order-search-input" 
+              class="form-input search-input" 
+              placeholder="Search by order # (e.g. ORD-8041) or client clinic..." 
+              value="${searchTerm}"
+            />
+          </div>
+
+          <!-- Status filter -->
+          <div style="min-width: 170px;">
+            <select id="order-status-filter" class="form-select">
+              <option value="all" ${selectedStatus === 'all' ? 'selected' : ''}>All Order Statuses</option>
+              <option value="Pending" ${selectedStatus === 'Pending' ? 'selected' : ''}>Pending (Awaiting Prep)</option>
+              <option value="Processing" ${selectedStatus === 'Processing' ? 'selected' : ''}>Processing (Warehouse)</option>
+              <option value="Shipped" ${selectedStatus === 'Shipped' ? 'selected' : ''}>Shipped (In Transit)</option>
+              <option value="Delivered" ${selectedStatus === 'Delivered' ? 'selected' : ''}>Delivered (Closed)</option>
+            </select>
+          </div>
+
+          <div id="orders-count-display" style="font-size: 0.8125rem; color: var(--text-muted);">
+            Showing <strong>${filtered.length}</strong> of ${orders.length} orders
+          </div>
+        </div>
+      </div>
+
+      <!-- Orders Table -->
+      <div class="card" style="padding: 0;">
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Order Number</th>
+                <th>Client Name & Channel</th>
+                <th>Order Date</th>
+                <th>Line Items Count</th>
+                <th>Total Value (Incl. VAT)</th>
+                <th>Status</th>
+                <th style="text-align: right;">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="orders-table-body">
+              ${buildTableRowsHtml(filtered)}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `;
+
+    // Listeners for inputs: update table without re-creating DOM inputs (preserves focus!)
+    container.querySelector('#order-search-input')?.addEventListener('input', (e) => {
+      searchTerm = e.target.value;
+      updateTableOnly();
+    });
+
+    container.querySelector('#order-status-filter')?.addEventListener('change', (e) => {
+      selectedStatus = e.target.value;
+      updateTableOnly();
     });
 
     container.querySelector('#btn-create-order-s7')?.addEventListener('click', () => {
@@ -241,8 +276,10 @@ export function renderOrderManagementScreen() {
     container.querySelector('#btn-next-screen10')?.addEventListener('click', () => {
       store.navigateTo('payment-reminders');
     });
+
+    attachRowListeners();
   }
 
-  renderContent();
+  renderLayout();
   return container;
 }

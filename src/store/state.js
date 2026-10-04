@@ -9,10 +9,12 @@ import {
   initialOrders,
   initialInvoices,
   initialRemindersLog,
-  revenueMonthlyData
+  initialTransferAuditLog,
+  revenueMonthlyData,
+  revenueCategoryMonthlyData
 } from '../data/mockData.js';
 
-const STORAGE_KEY = 'worthit_wil_prototype_state_v4';
+const STORAGE_KEY = 'worthit_wil_prototype_state_v5';
 
 class StateStore {
   constructor() {
@@ -35,6 +37,9 @@ class StateStore {
           parsed.currentUser.name = 'John Admin';
           parsed.currentUser.avatarInitials = 'JA';
         }
+        if (!parsed.transferAuditLog || parsed.transferAuditLog.length === 0) {
+          parsed.transferAuditLog = [...initialTransferAuditLog];
+        }
         return parsed;
       }
     } catch (e) {
@@ -53,6 +58,7 @@ class StateStore {
       orders: [...initialOrders],
       invoices: [...initialInvoices],
       remindersLog: [...initialRemindersLog],
+      transferAuditLog: [...initialTransferAuditLog],
       revenueData: [...revenueMonthlyData],
       reminderSettings: {
         day7: true,
@@ -179,22 +185,25 @@ class StateStore {
     this.notify();
   }
 
-  // Tax Engine Calculation
+  // Tax Engine Calculation (SARS Section 11(e) + Section 18A + VAT Input Claims)
   calculateTaxDeduction(assets, opsExpenses, bulkRev) {
-    const totalAssets = parseFloat(assets) || 0;
-    const operationalExpenses = parseFloat(opsExpenses) || 0;
-    const bulkRevenue = parseFloat(bulkRev) || 0;
+    const totalAssets = Math.max(0, parseFloat(assets) || 0);
+    const operationalExpenses = Math.max(0, parseFloat(opsExpenses) || 0);
+    const bulkRevenue = Math.max(0, parseFloat(bulkRev) || 0);
 
-    // SARS wear and tear depreciation estimate (~15% on clinical equipment & furniture assets)
+    // SARS wear-and-tear depreciation estimate (~15% on clinical equipment & furniture assets)
     const depreciationDeduction = totalAssets * 0.15;
     const operationalDeduction = operationalExpenses;
-    // VAT input claims on bulk goods & supplies (15/115 ~ 13.04%)
-    const vatInputClaim = (bulkRevenue * 0.15);
+    // VAT input claims on bulk goods & supplies (15%)
+    const vatInputClaim = bulkRevenue * 0.15;
 
     const totalDeductions = depreciationDeduction + operationalDeduction + vatInputClaim;
     const totalBase = totalAssets + operationalExpenses + bulkRevenue;
     const totalDeductionPct = totalBase > 0 ? ((totalDeductions / totalBase) * 100).toFixed(1) : '24.5';
-    const taxLiabilityReducedPct = ((totalDeductions / (totalAssets + operationalExpenses)) * 18.5).toFixed(1);
+    
+    const baseDenom = totalAssets + operationalExpenses;
+    const rawReduced = baseDenom > 0 ? ((totalDeductions / baseDenom) * 18.5) : 22.8;
+    const boundedReduced = Math.min(38, Math.max(15, isNaN(rawReduced) ? 22.8 : rawReduced)).toFixed(1);
 
     this.state.lastTaxCalculation = {
       totalAssets,
@@ -204,7 +213,7 @@ class StateStore {
       depreciationDeduction,
       operationalDeduction,
       vatInputClaim,
-      taxLiabilityReducedPct: Math.min(38, Math.max(15, parseFloat(taxLiabilityReducedPct)))
+      taxLiabilityReducedPct: boundedReduced
     };
 
     this.notify();
@@ -216,18 +225,80 @@ class StateStore {
     const product = this.state.products.find((p) => p.id === productId);
     if (!product) return false;
 
+    const addQty = Math.max(1, parseInt(quantity, 10) || 50);
+
     if (pool === 'retail') {
-      product.retailStock += quantity;
+      product.retailStock += addQty;
     } else {
-      product.bulkStock += quantity;
+      product.bulkStock += addQty;
     }
 
-    if (product.retailStock + product.bulkStock > product.reorderLevel) {
+    // Refresh stock status
+    if (product.retailStock === 0) {
+      product.status = 'Out of Stock';
+    } else if (product.retailStock < 10 || (product.retailStock + product.bulkStock) <= product.reorderLevel) {
+      product.status = 'Low Stock';
+    } else {
       product.status = 'In Stock';
     }
 
     this.notify();
     return true;
+  }
+
+  // Stock Segregation Transfer: Convert Bulk Units to Retail Pool with Audit Trail
+  transferBulkToRetail(productId, quantity, notes = '') {
+    const product = this.state.products.find((p) => p.id === productId);
+    if (!product) {
+      return { success: false, message: 'Selected product not found.' };
+    }
+
+    const qty = parseInt(quantity, 10);
+    if (isNaN(qty) || qty <= 0) {
+      return { success: false, message: 'Please specify a valid transfer quantity greater than 0.' };
+    }
+
+    if (product.bulkStock < qty) {
+      return {
+        success: false,
+        message: `Insufficient bulk reserve. Available: ${product.bulkStock} ${product.unit}s, requested: ${qty}.`
+      };
+    }
+
+    // Deduct from bulk, credit to retail
+    product.bulkStock -= qty;
+    product.retailStock += qty;
+
+    // Recalculate status
+    if (product.retailStock === 0) {
+      product.status = 'Out of Stock';
+    } else if (product.retailStock < 10 || (product.retailStock + product.bulkStock) <= product.reorderLevel) {
+      product.status = 'Low Stock';
+    } else {
+      product.status = 'In Stock';
+    }
+
+    // Append to audit trail
+    const auditRecord = {
+      id: `TRF-${Math.floor(8100 + Math.random() * 899)}`,
+      date: new Date().toISOString().replace('T', ' ').slice(0, 16),
+      productId: product.id,
+      productName: product.name,
+      quantity: qty,
+      from: 'Bulk Reserve Pool',
+      to: 'Retail Store Pool',
+      operator: this.state.currentUser?.name || 'John Admin',
+      status: 'Verified & Logged',
+      notes: notes || 'Routine bulk-to-retail inventory reallocation'
+    };
+
+    if (!this.state.transferAuditLog) {
+      this.state.transferAuditLog = [];
+    }
+    this.state.transferAuditLog.unshift(auditRecord);
+
+    this.notify();
+    return { success: true, transfer: auditRecord };
   }
 
   // Bulk Order Placement -> generates order and links to invoice
@@ -251,17 +322,31 @@ class StateStore {
 
     // Deduct from bulk stock
     orderData.items.forEach((item) => {
-      const prod = this.state.products.find((p) => p.name === item.productName);
+      const prod = this.state.products.find((p) => p.name === item.productName || p.id === item.productId);
       if (prod) {
         prod.bulkStock = Math.max(0, prod.bulkStock - item.quantity);
+        if (prod.retailStock === 0 && prod.bulkStock === 0) {
+          prod.status = 'Out of Stock';
+        } else if (prod.retailStock < 10 || (prod.retailStock + prod.bulkStock) <= prod.reorderLevel) {
+          prod.status = 'Low Stock';
+        }
       }
     });
 
     this.state.orders.unshift(newOrder);
 
-    // Create corresponding invoice
+    // Create corresponding invoice with clean unit price & total math
     const dueDate = new Date();
     dueDate.setDate(dueDate.getDate() + 30);
+
+    const invoiceItems = orderData.items.map((it) => {
+      return {
+        description: `${it.productName} (${it.displayQty || `${it.quantity} units`})`,
+        qty: it.quantity,
+        unitPrice: it.unitPrice,
+        total: it.lineTotal || (it.unitPrice * it.quantity)
+      };
+    });
 
     const newInvoice = {
       id: newInvoiceId,
@@ -270,18 +355,15 @@ class StateStore {
       clientId: orderData.clientId,
       issueDate: new Date().toISOString().split('T')[0],
       dueDate: dueDate.toISOString().split('T')[0],
+      grossSubtotal: orderData.subtotal,
+      discountAmount: orderData.discountAmount,
       subtotal: orderData.subtotal - orderData.discountAmount,
       vatRate: 0.15,
       vatAmount: orderData.vatAmount,
       totalAmount: orderData.totalAmount,
       status: 'Pending',
       daysOverdue: 0,
-      items: orderData.items.map((it) => ({
-        description: `${it.productName} (Bulk Pack)`,
-        qty: Math.ceil(it.quantity / 12) || 1,
-        unitPrice: it.unitPrice * (it.quantity > 12 ? 12 : 1),
-        total: it.unitPrice * it.quantity
-      }))
+      items: invoiceItems
     };
 
     this.state.invoices.unshift(newInvoice);

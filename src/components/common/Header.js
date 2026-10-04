@@ -105,12 +105,21 @@ export function renderHeader() {
   const userBtn = header.querySelector('#btn-user-profile');
   const userMenu = header.querySelector('#user-dropdown-menu');
   if (userBtn && userMenu) {
+    const handleDocClick = (e) => {
+      if (!userMenu.contains(e.target) && !userBtn.contains(e.target)) {
+        userMenu.classList.remove('active');
+        document.removeEventListener('click', handleDocClick);
+      }
+    };
+
     userBtn.addEventListener('click', (e) => {
       e.stopPropagation();
-      userMenu.classList.toggle('active');
-    });
-    document.addEventListener('click', () => {
-      userMenu.classList.remove('active');
+      const isActive = userMenu.classList.toggle('active');
+      if (isActive) {
+        document.addEventListener('click', handleDocClick);
+      } else {
+        document.removeEventListener('click', handleDocClick);
+      }
     });
   }
 

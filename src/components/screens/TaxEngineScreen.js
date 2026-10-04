@@ -13,6 +13,12 @@ export function renderTaxEngineScreen() {
   const container = document.createElement('div');
   container.className = 'page-content';
 
+  function formatCurrency(val) {
+    return `R ${(val || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  }
+
+  const totalDeductions = (tax.depreciationDeduction || 0) + (tax.operationalDeduction || 0) + (tax.vatInputClaim || 0);
+
   container.innerHTML = `
     <div class="page-header">
       <div class="page-title-group">
@@ -51,6 +57,7 @@ export function renderTaxEngineScreen() {
               class="form-input" 
               value="${tax.totalAssets}" 
               step="1000" 
+              min="0"
               required 
             />
           </div>
@@ -66,6 +73,7 @@ export function renderTaxEngineScreen() {
               class="form-input" 
               value="${tax.operationalExpenses}" 
               step="1000" 
+              min="0"
               required 
             />
           </div>
@@ -81,6 +89,7 @@ export function renderTaxEngineScreen() {
               class="form-input" 
               value="${tax.bulkRevenue}" 
               step="1000" 
+              min="0"
               required 
             />
           </div>
@@ -113,7 +122,7 @@ export function renderTaxEngineScreen() {
 
           <!-- Green Success Banner -->
           <div style="padding: 1.25rem; background: var(--status-success-bg); border: 1px solid var(--status-success-border); border-radius: var(--radius-lg); margin-bottom: 1.25rem; display: flex; align-items: center; gap: 1rem;">
-            <div style="width: 44px; height: 44px; border-radius: 50%; background: var(--status-success); color: white; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; flex-shrink: 0;">
+            <div style="width: 44px; height: 44px; border-radius: 50%; background: var(--status-success); color: var(--text-inverse); display: flex; align-items: center; justify-content: center; font-size: 1.25rem; font-weight: 800; flex-shrink: 0;">
               ✓
             </div>
             <div>
@@ -126,35 +135,57 @@ export function renderTaxEngineScreen() {
             </div>
           </div>
 
-          <!-- Deduction Breakdown Items -->
+          <!-- Deduction Breakdown Items with Exact Rand Figures -->
           <div style="display: flex; flex-direction: column; gap: 0.75rem;">
             <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.85rem 1rem; background: var(--bg-surface-subtle); border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
               <div>
-                <strong style="color: var(--text-primary); font-size: 0.9rem;">1. Capital Asset Depreciation</strong>
-                <div style="font-size: 0.72rem; color: var(--text-muted);">Wear-and-tear deduction on furniture & tables (15% p.a.)</div>
+                <strong style="color: var(--text-primary); font-size: 0.9rem;">1. Capital Asset Depreciation (SARS Section 11(e))</strong>
+                <div style="font-size: 0.72rem; color: var(--text-muted);">Wear-and-tear deduction on clinical furniture & hydraulic equipment (15% p.a.)</div>
               </div>
               <div style="text-align: right;">
-                <span class="badge badge-info" id="res-depr-badge">Qualifying Deduction</span>
+                <div style="font-weight: 800; color: var(--text-primary); font-size: 0.95rem;" id="res-depr-amount">
+                  ${formatCurrency(tax.depreciationDeduction)}
+                </div>
+                <span class="badge badge-info" id="res-depr-badge" style="font-size: 0.65rem;">Qualifying Deduction</span>
               </div>
             </div>
 
             <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.85rem 1rem; background: var(--bg-surface-subtle); border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
               <div>
-                <strong style="color: var(--text-primary); font-size: 0.9rem;">2. Operational Expenses (Section 11a)</strong>
+                <strong style="color: var(--text-primary); font-size: 0.9rem;">2. Operational Expenses (SARS Section 11(a))</strong>
                 <div style="font-size: 0.72rem; color: var(--text-muted);">Rent, distribution logistics, and administrative overheads</div>
               </div>
               <div style="text-align: right;">
-                <span class="badge badge-success" id="res-ops-badge">100% Deductible</span>
+                <div style="font-weight: 800; color: var(--status-success); font-size: 0.95rem;" id="res-ops-amount">
+                  ${formatCurrency(tax.operationalDeduction)}
+                </div>
+                <span class="badge badge-success" id="res-ops-badge" style="font-size: 0.65rem;">100% Deductible</span>
               </div>
             </div>
 
             <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.85rem 1rem; background: var(--bg-surface-subtle); border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
               <div>
                 <strong style="color: var(--text-primary); font-size: 0.9rem;">3. VAT Input Tax Credits</strong>
-                <div style="font-size: 0.72rem; color: var(--text-muted);">15% VAT reclaimed on bulk clinic supplies and stock intake</div>
+                <div style="font-size: 0.72rem; color: var(--text-muted);">15% VAT reclaimed on bulk clinic supplies and intake</div>
               </div>
               <div style="text-align: right;">
-                <span class="badge badge-bulk" id="res-vat-badge">15% VAT Credit</span>
+                <div style="font-weight: 800; color: var(--color-primary); font-size: 0.95rem;" id="res-vat-amount">
+                  ${formatCurrency(tax.vatInputClaim)}
+                </div>
+                <span class="badge badge-bulk" id="res-vat-badge" style="font-size: 0.65rem;">15% VAT Credit</span>
+              </div>
+            </div>
+
+            <!-- Total Deductions Row -->
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.85rem 1rem; background: var(--color-primary-bg); border-radius: var(--radius-md); border: 1px solid var(--color-primary-border);">
+              <div>
+                <strong style="color: var(--color-primary); font-size: 0.95rem;">Total Qualifying Tax Shield</strong>
+                <div style="font-size: 0.72rem; color: var(--text-muted);">Cumulative taxable income deductions</div>
+              </div>
+              <div style="text-align: right;">
+                <div style="font-weight: 800; color: var(--color-primary); font-size: 1.1rem;" id="res-total-amount">
+                  ${formatCurrency(totalDeductions)}
+                </div>
               </div>
             </div>
           </div>
@@ -162,7 +193,7 @@ export function renderTaxEngineScreen() {
 
         <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border-subtle); font-size: 0.75rem; color: var(--text-muted); display: flex; justify-content: space-between;">
           <span>SARS Compliance Engine v2.4</span>
-          <span>Last calculation: Instantaneous</span>
+          <span>Verified: Section 11(e) & Section 11(a)</span>
         </div>
       </div>
     </div>
@@ -196,6 +227,12 @@ export function renderTaxEngineScreen() {
 
       container.querySelector('#res-reduction-pct').textContent = `${res.taxLiabilityReducedPct}%`;
       container.querySelector('#res-total-pct').textContent = `${res.totalDeductionPct}%`;
+      container.querySelector('#res-depr-amount').textContent = formatCurrency(res.depreciationDeduction);
+      container.querySelector('#res-ops-amount').textContent = formatCurrency(res.operationalDeduction);
+      container.querySelector('#res-vat-amount').textContent = formatCurrency(res.vatInputClaim);
+      
+      const newTotal = (res.depreciationDeduction || 0) + (res.operationalDeduction || 0) + (res.vatInputClaim || 0);
+      container.querySelector('#res-total-amount').textContent = formatCurrency(newTotal);
 
       showToast(
         'Calculation Complete',
