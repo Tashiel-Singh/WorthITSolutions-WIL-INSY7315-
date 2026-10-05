@@ -3,17 +3,12 @@ dist/
 dist-ssr/
 *.local
 
-<<<<<<< HEAD
+# Environment variables & secrets
 .env
 .env.*
 !.env.example
 *.zip
 infra/secrets.*
-=======
-# Environment variables & secrets
-.env
-.env.*
-!.env.example
 
 # Test coverage & build caches
 coverage/
@@ -25,5 +20,3 @@ coverage/
 *.njsproj
 *.sln
 *.sw?
-
->>>>>>> origin/main

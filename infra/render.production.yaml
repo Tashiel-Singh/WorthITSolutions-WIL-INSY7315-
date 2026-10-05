@@ -25,7 +25,7 @@ services:
       - key: JWT_EXPIRES_IN
         value: 15m
       - key: CORS_ORIGIN
-        value: https://medflow-web-wil26sc.onrender.com
+        value: https://medflow-web-wil26sc.onrender.com,https://tashiel-singh.github.io,http://localhost:5173
   - type: web
     name: medflow-web-wil26sc
     runtime: static

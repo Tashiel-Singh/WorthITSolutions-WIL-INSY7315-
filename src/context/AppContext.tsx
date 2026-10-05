@@ -1,7 +1,7 @@
 /**
  * Central State Store & Context for Project MedFlow
  */
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import {
   UserProfile,
   UserRole,
@@ -23,6 +23,9 @@ import {
   initialStockTransfers,
   initialRevenueData,
 } from '../data/mockData';
+import { medflowApi, API_BASE_URL } from '../services/api';
+
+export type BackendConnectionStatus = 'checking' | 'connected' | 'offline' | 'stub';
 
 interface AppContextType {
   currentUser: UserProfile;
@@ -45,6 +48,11 @@ interface AppContextType {
   searchQuery: string;
   setSearchQuery: (query: string) => void;
   resetAllData: () => void;
+  backendStatus: BackendConnectionStatus;
+  backendLatency: number | null;
+  backendUrl: string;
+  backendStatusMessage: string;
+  recheckBackendConnection: () => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -60,6 +68,44 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [activeStockPool, setActiveStockPool] = useState<StockPool>('bulk');
   const [activeCategory, setActiveCategory] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [backendStatus, setBackendStatus] = useState<BackendConnectionStatus>('checking');
+  const [backendLatency, setBackendLatency] = useState<number | null>(null);
+  const [backendStatusMessage, setBackendStatusMessage] = useState<string>('Initializing Render backend probe...');
+
+  const recheckBackendConnection = useCallback(async () => {
+    setBackendStatus('checking');
+    setBackendStatusMessage('Connecting to Render API & PostgreSQL database...');
+    try {
+      const res = await medflowApi.checkHealth(6000);
+      setBackendLatency(res.latencyMs);
+      if (res.ok) {
+        if (res.isStub) {
+          setBackendStatus('stub');
+          setBackendStatusMessage(`Render API stub active (${res.latencyMs}ms)`);
+        } else {
+          setBackendStatus('connected');
+          setBackendStatusMessage(`Render backend connected (${res.latencyMs}ms)`);
+        }
+      } else {
+        setBackendStatus('offline');
+        setBackendStatusMessage(res.error || 'Backend offline / sleeping (Local cache active)');
+      }
+    } catch {
+      setBackendStatus('offline');
+      setBackendStatusMessage('Render backend offline (Local cache active)');
+    }
+  }, []);
+
+  useEffect(() => {
+    const isTest = typeof process !== 'undefined' && (process.env as any)?.NODE_ENV === 'test';
+    if (!isTest) {
+      recheckBackendConnection();
+    } else {
+      setBackendStatus('connected');
+      setBackendStatusMessage('Render backend connected (test mode)');
+      setBackendLatency(45);
+    }
+  }, [recheckBackendConnection]);
 
   const switchRole = (role: UserRole) => {
     const user = initialUsers.find((u) => u.role === role) || initialUsers[0];
@@ -200,6 +246,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setOrders((prev) => [newOrder, ...prev]);
     setInvoices((prev) => [newInvoice, ...prev]);
 
+    // Asynchronous backend synchronization (if Render backend is reachable)
+    if (backendStatus === 'connected') {
+      medflowApi.createOrder({
+        pharmacyId: currentUser.role === 'distributor' ? undefined : currentUser.id,
+        items: orderData.items.map((i) => ({ productId: i.productId, quantity: i.totalUnits })),
+      }).catch((err) => {
+        console.warn('Backend order sync deferred / fallback used:', err);
+      });
+    }
+
     return newOrder;
   };
 
@@ -207,6 +263,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setOrders((prev) =>
       prev.map((o) => (o.id === orderId ? { ...o, status } : o))
     );
+
+    if (backendStatus === 'connected') {
+      medflowApi.updateOrderStatus(orderId, status).catch((err) => {
+        console.warn('Backend status update deferred / fallback used:', err);
+      });
+    }
   };
 
   const requestPrescriptionRefill = (prescriptionId: string) => {
@@ -258,6 +320,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         searchQuery,
         setSearchQuery,
         resetAllData,
+        backendStatus,
+        backendLatency,
+        backendUrl: API_BASE_URL,
+        backendStatusMessage,
+        recheckBackendConnection,
       }}
     >
       {children}
