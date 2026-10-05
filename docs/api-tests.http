@@ -1,0 +1,23 @@
+### Login as owner
+POST http://localhost:4000/api/auth/login
+Content-Type: application/json
+
+{ "email": "owner@medflow.test", "password": "OwnerPass123" }
+
+### Bulk process (paste token)
+POST http://localhost:4000/api/orders/bulk-process
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "basePrice": 330, "quantity": 24 }
+
+### Tax deduction
+POST http://localhost:4000/api/tax/calculate-deduction
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "assets": [{ "cost": 50000 }], "expenses": [{ "amount": 20000 }], "bulkRevenue": 100000 }
+
+### Revenue breakdown
+GET http://localhost:4000/api/analytics/revenue-breakdown
+Authorization: Bearer {{token}}
