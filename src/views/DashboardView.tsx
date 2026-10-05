@@ -285,7 +285,7 @@ export const DashboardView: React.FC = () => {
                 Interactive SARS Section 11(e) Tax Optimization Engine
               </h2>
               <p className="text-xs text-slate-500">
-                Simulate wear-and-tear depreciation write-offs, qualifying expenses, and 15% VAT input claims.
+                Simulate wear-and-tear depreciation write-offs (20%), qualifying operational overhead (15%), and bulk VAT input claims (5%).
               </p>
             </div>
           </div>
@@ -311,7 +311,7 @@ export const DashboardView: React.FC = () => {
               onChange={(e) => setCapitalAssets(Number(e.target.value))}
               className="w-full accent-brand-700 cursor-pointer"
             />
-            <p className="text-[11px] text-slate-400 mt-1">Extraction apparatus, climate warehouses, logistics.</p>
+            <p className="text-[11px] text-slate-400 mt-1">Extraction apparatus, climate warehouses, logistics (20% p.a.).</p>
           </div>
 
           {/* Slider 2: Operational Expenses */}
@@ -330,7 +330,7 @@ export const DashboardView: React.FC = () => {
               onChange={(e) => setOpsExpenses(Number(e.target.value))}
               className="w-full accent-brand-700 cursor-pointer"
             />
-            <p className="text-[11px] text-slate-400 mt-1">Compliance audits, ISO testing, facility rent, utilities.</p>
+            <p className="text-[11px] text-slate-400 mt-1">Compliance audits, ISO testing, facility rent, utilities (15% p.a.).</p>
           </div>
 
           {/* Slider 3: Bulk Turnover */}
@@ -349,34 +349,34 @@ export const DashboardView: React.FC = () => {
               onChange={(e) => setBulkTurnover(Number(e.target.value))}
               className="w-full accent-brand-700 cursor-pointer"
             />
-            <p className="text-[11px] text-slate-400 mt-1">Generates 15% VAT input credit on wholesale intake.</p>
+            <p className="text-[11px] text-slate-400 mt-1">Generates 5% VAT input claim credit on wholesale intake.</p>
           </div>
         </div>
 
         {/* Engine Output Breakdown */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6 pt-5 border-t border-slate-100 bg-slate-50/70 p-4 rounded-xl">
           <div>
-            <div className="text-[11px] text-slate-500 font-medium">Wear & Tear (15% p.a.)</div>
+            <div className="text-[11px] text-slate-500 font-medium">Wear & Tear (20% p.a.)</div>
             <div className="text-sm font-bold text-slate-900 mt-0.5">
               {formatCurrency(taxModel.wearAndTearDeduction)}
             </div>
           </div>
           <div>
-            <div className="text-[11px] text-slate-500 font-medium">Operational Deductions</div>
+            <div className="text-[11px] text-slate-500 font-medium">Operational Overhead (15%)</div>
             <div className="text-sm font-bold text-slate-900 mt-0.5">
               {formatCurrency(taxModel.operationalDeduction)}
             </div>
           </div>
           <div>
-            <div className="text-[11px] text-slate-500 font-medium">15% VAT Input Claim</div>
+            <div className="text-[11px] text-slate-500 font-medium">5% VAT Input Claim</div>
             <div className="text-sm font-bold text-brand-700 mt-0.5">
               {formatCurrency(taxModel.vatInputCredit)}
             </div>
           </div>
           <div>
-            <div className="text-[11px] text-slate-500 font-medium">Net Tax Liability Reduced</div>
+            <div className="text-[11px] text-slate-500 font-medium">Total Deduction Shield</div>
             <div className="text-base font-black text-emerald-700 mt-0.5">
-              {taxModel.taxLiabilityReducedPct}%
+              {formatCurrency(taxModel.totalDeduction)}
             </div>
           </div>
         </div>

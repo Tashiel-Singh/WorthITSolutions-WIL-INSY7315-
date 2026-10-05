@@ -66,32 +66,45 @@ export function calculateVat(netAmount: number, vatRate = RSA_STANDARD_VAT_RATE)
 
 /**
  * Calculates Section 11(e) wear-and-tear depreciation & Section 11(a) operational deductions
+ * INSY7315 Task 2 Formula: Total Deduction = (Depreciable Assets * 0.20) + (Operational Expenses * 0.15) + (Bulk Revenue * 0.05 VAT Input)
  */
 export function calculateSection11eDepreciation(
   capitalAssets: number,
   operationalExpenses: number,
   bulkTurnover: number
 ): {
+  depreciableAssetsDeduction: number;
   wearAndTearDeduction: number;
   operationalDeduction: number;
   vatInputCredit: number;
+  totalDeduction: number;
   totalTaxShield: number;
   taxLiabilityReducedPct: number;
 } {
-  // SARS write-off ~15% for extraction equipment, climate storage, furniture
-  const wearAndTearDeduction = capitalAssets * 0.15;
-  const operationalDeduction = operationalExpenses;
-  const vatInputCredit = bulkTurnover * RSA_STANDARD_VAT_RATE;
-  const totalTaxShield = wearAndTearDeduction + operationalDeduction + vatInputCredit;
+  // 1. Depreciable Assets @ 20% annual write-off rate (SARS Section 11(e))
+  const wearAndTearDeduction = capitalAssets * 0.20;
+  const depreciableAssetsDeduction = wearAndTearDeduction;
+
+  // 2. Operational Expenses @ 15% qualifying deduction rate (SARS Section 11(a))
+  const operationalDeduction = operationalExpenses * 0.15;
+
+  // 3. Bulk Revenue @ 5% VAT Input claim credit
+  const vatInputCredit = bulkTurnover * 0.05;
+
+  // Total Tax Deduction Shield
+  const totalDeduction = wearAndTearDeduction + operationalDeduction + vatInputCredit;
+  const totalTaxShield = totalDeduction;
 
   const base = capitalAssets + operationalExpenses;
-  const rawPct = base > 0 ? (totalTaxShield / base) * 18.5 : 22.8;
-  const taxLiabilityReducedPct = Math.min(38, Math.max(15, Math.round(rawPct * 10) / 10));
+  const rawPct = base > 0 ? (totalTaxShield / base) * 100 : 25.0;
+  const taxLiabilityReducedPct = Math.min(45, Math.max(10, Math.round(rawPct * 10) / 10));
 
   return {
+    depreciableAssetsDeduction: Math.round(depreciableAssetsDeduction * 100) / 100,
     wearAndTearDeduction: Math.round(wearAndTearDeduction * 100) / 100,
     operationalDeduction: Math.round(operationalDeduction * 100) / 100,
     vatInputCredit: Math.round(vatInputCredit * 100) / 100,
+    totalDeduction: Math.round(totalDeduction * 100) / 100,
     totalTaxShield: Math.round(totalTaxShield * 100) / 100,
     taxLiabilityReducedPct,
   };

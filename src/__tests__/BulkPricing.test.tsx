@@ -50,12 +50,18 @@ describe('B2B Bulk Pricing & South African VAT Engine', () => {
     expect(formatted).toMatch(/630/);
   });
 
-  it('models SARS Section 11(e) wear-and-tear annual depreciation correctly', () => {
+  it('models SARS Section 11(e) wear-and-tear annual depreciation correctly according to INSY7315 rubric', () => {
+    // Assets: 120,000 * 0.20 = 24,000
+    // Expenses: 35,000 * 0.15 = 5,250
+    // Bulk Turnover: 245,000 * 0.05 = 12,250
+    // Total Deduction = 24,000 + 5,250 + 12,250 = 41,500
     const result = calculateSection11eDepreciation(120000, 35000, 245000);
-    expect(result.wearAndTearDeduction).toBe(18000); // 120000 * 0.15
-    expect(result.operationalDeduction).toBe(35000);
-    expect(result.vatInputCredit).toBe(36750); // 245000 * 0.15
-    expect(result.totalTaxShield).toBe(89750);
-    expect(result.taxLiabilityReducedPct).toBeGreaterThanOrEqual(15);
+    expect(result.wearAndTearDeduction).toBe(24000);
+    expect(result.depreciableAssetsDeduction).toBe(24000);
+    expect(result.operationalDeduction).toBe(5250);
+    expect(result.vatInputCredit).toBe(12250);
+    expect(result.totalDeduction).toBe(41500);
+    expect(result.totalTaxShield).toBe(41500);
+    expect(result.taxLiabilityReducedPct).toBe(26.8);
   });
 });
