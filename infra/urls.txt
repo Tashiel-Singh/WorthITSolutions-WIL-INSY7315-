@@ -1,0 +1,2 @@
+API_URL=https://medflow-api-wil26sc.onrender.com
+WEB_URL=https://medflow-web-wil26sc.onrender.com

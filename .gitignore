@@ -3,6 +3,13 @@ dist/
 dist-ssr/
 *.local
 
+<<<<<<< HEAD
+.env
+.env.*
+!.env.example
+*.zip
+infra/secrets.*
+=======
 # Environment variables & secrets
 .env
 .env.*
@@ -19,3 +26,4 @@ coverage/
 *.sln
 *.sw?
 
+>>>>>>> origin/main

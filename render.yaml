@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: medflow-api-wil26sc
+    runtime: node
+    plan: free
+    rootDir: infra/stub
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /health
+    autoDeploy: false
+  - type: web
+    name: medflow-web-wil26sc
+    runtime: static
+    rootDir: infra/stub-web
+    buildCommand: echo static
+    staticPublishPath: .
+    autoDeploy: false
