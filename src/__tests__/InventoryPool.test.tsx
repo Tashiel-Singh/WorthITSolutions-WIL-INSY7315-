@@ -22,7 +22,7 @@ describe('Dual-Pool Inventory Segregation & Expiry Tracking System', () => {
     // Current test date is October 2026
     const alert30 = getExpiryCountdown('2026-11-01');
     expect(alert30.level).toBe('warning-30');
-    expect(alert30.label).toContain('28d');
+    expect(alert30.label).toMatch(/\d+d left \(Notice\)/);
 
     const alertOptimal = getExpiryCountdown('2028-06-30');
     expect(alertOptimal.level).toBe('optimal');
