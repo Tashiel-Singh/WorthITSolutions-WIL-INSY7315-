@@ -52,6 +52,15 @@ jobs:
       - name: 🧪 Run Automated Vitest Component Tests
         run: npm run test:ci
 
+      - name: 🗄️ Verify Backend Suite (Prisma, Jest Tests, Build)
+        run: |
+          cd backend
+          npm ci
+          npx prisma generate
+          npm test
+          npm run build
+          cd ..
+
       - name: 🏗️ Execute Production Build
         run: npm run build
 
