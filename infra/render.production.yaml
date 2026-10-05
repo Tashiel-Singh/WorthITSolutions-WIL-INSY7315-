@@ -9,8 +9,8 @@ services:
     runtime: node
     plan: free
     rootDir: backend
-    buildCommand: npm ci --include=dev && npx prisma generate && npm run build --if-present
-    startCommand: npx prisma migrate deploy && npm start
+    buildCommand: npm ci --include=dev && npx prisma generate && npm run build
+    startCommand: 'npx prisma migrate deploy && if [ -f dist/src/server.js ]; then node dist/src/server.js; else node dist/server.js; fi'
     healthCheckPath: /health
     autoDeploy: false
     envVars:
@@ -21,15 +21,14 @@ services:
           name: medflow-db-wil26sc
           property: connectionString
       - key: JWT_SECRET
-        generateValue: true
-      - key: JWT_EXPIRES_IN
+        sync: false
+      - key: JWT_ACCESS_EXPIRES
         value: 15m
       - key: CORS_ORIGIN
-        value: https://medflow-web-wil26sc.onrender.com,https://tashiel-singh.github.io,http://localhost:5173
+        value: https://medflow-web-wil26sc.onrender.com,https://tashiel-singh.github.io
   - type: web
     name: medflow-web-wil26sc
     runtime: static
-    rootDir: frontend
     buildCommand: npm ci && npm run build
     staticPublishPath: dist
     autoDeploy: false
