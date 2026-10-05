@@ -14,7 +14,6 @@ import {
   ExternalLink,
   RefreshCw,
   CheckCircle2,
-  AlertTriangle,
   X,
 } from 'lucide-react';
 
@@ -98,7 +97,7 @@ export const Header: React.FC<HeaderProps> = ({ onToggleSidebar, isSidebarOpen }
                 ? 'bg-emerald-50 text-emerald-800 border-emerald-200/80 hover:bg-emerald-100'
                 : backendStatus === 'checking'
                 ? 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100'
-                : 'bg-amber-50 text-amber-800 border-amber-200/80 hover:bg-amber-100'
+                : 'bg-emerald-50 text-emerald-800 border-emerald-200/80 hover:bg-emerald-100'
             }`}
           >
             <div className="relative flex items-center justify-center">
@@ -110,7 +109,7 @@ export const Header: React.FC<HeaderProps> = ({ onToggleSidebar, isSidebarOpen }
               ) : backendStatus === 'checking' ? (
                 <RefreshCw className="w-3 h-3 animate-spin text-blue-600" />
               ) : (
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-600" />
               )}
             </div>
             <Server className="w-3.5 h-3.5" />
@@ -119,7 +118,7 @@ export const Header: React.FC<HeaderProps> = ({ onToggleSidebar, isSidebarOpen }
                 ? `Render Live ${backendLatency ? `(${backendLatency}ms)` : ''}`
                 : backendStatus === 'checking'
                 ? 'Probing Render...'
-                : 'Local Cache Mode'}
+                : 'Mock Demo Mode'}
             </span>
           </button>
 
@@ -190,17 +189,13 @@ export const Header: React.FC<HeaderProps> = ({ onToggleSidebar, isSidebarOpen }
                 className={`p-3.5 rounded-xl border flex items-start gap-3 ${
                   isConnected
                     ? 'bg-emerald-50 border-emerald-200 text-emerald-900'
-                    : 'bg-amber-50 border-amber-200 text-amber-900'
+                    : 'bg-emerald-50 border-emerald-200 text-emerald-900'
                 }`}
               >
-                {isConnected ? (
-                  <CheckCircle2 className="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0" />
-                ) : (
-                  <AlertTriangle className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
-                )}
+                <CheckCircle2 className="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0" />
                 <div>
                   <div className="text-xs font-bold uppercase tracking-wider">
-                    {isConnected ? 'Backend Active' : 'Offline / High-Fidelity Local Cache'}
+                    {isConnected ? 'Backend Active' : 'Standalone Mock Demo Mode (In-Memory Database)'}
                   </div>
                   <div className="text-xs mt-0.5 leading-relaxed">{backendStatusMessage}</div>
                 </div>

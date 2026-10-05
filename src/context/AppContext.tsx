@@ -88,11 +88,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         }
       } else {
         setBackendStatus('offline');
-        setBackendStatusMessage(res.error || 'Backend offline / sleeping (Local cache active)');
+        setBackendStatusMessage('Mock Data Active — Self-Contained In-Memory Store');
       }
     } catch {
       setBackendStatus('offline');
-      setBackendStatusMessage('Render backend offline (Local cache active)');
+      setBackendStatusMessage('Mock Data Active — Self-Contained In-Memory Store');
     }
   }, []);
 

@@ -9,6 +9,8 @@ import { Button } from '../components/common/Button';
 import { UserRole } from '../types';
 import { Activity, ShieldCheck, Building2, User, KeyRound, Mail, ArrowRight } from 'lucide-react';
 
+import { initialUsers } from '../data/mockData';
+
 export const LoginView: React.FC = () => {
   const navigate = useNavigate();
   const { switchRole } = useApp();
@@ -44,11 +46,44 @@ export const LoginView: React.FC = () => {
 
     setIsLoading(true);
     setTimeout(() => {
-      switchRole(selectedRole);
+      const normalizedEmail = email.trim().toLowerCase();
+      let targetRole: UserRole = selectedRole;
+      if (
+        normalizedEmail.includes('eleanor') ||
+        normalizedEmail.includes('stmarys') ||
+        normalizedEmail.includes('pharmacy')
+      ) {
+        targetRole = 'pharmacy';
+      } else if (
+        normalizedEmail.includes('sarah') ||
+        normalizedEmail.includes('patient')
+      ) {
+        targetRole = 'patient';
+      } else if (
+        normalizedEmail.includes('thomas') ||
+        normalizedEmail.includes('owner') ||
+        normalizedEmail.includes('admin') ||
+        normalizedEmail.includes('distributor')
+      ) {
+        targetRole = 'distributor';
+      }
+
+      switchRole(targetRole);
       setIsLoading(false);
-      showToast('Authentication Successful', `Logged in as ${selectedRole.toUpperCase()} (Thomas / MedFlow)`, 'success');
-      navigate(selectedRole === 'patient' ? '/patient-portal' : '/dashboard');
-    }, 600);
+      const targetUser = initialUsers.find((u) => u.role === targetRole) || initialUsers[0];
+      showToast(
+        'Authentication Successful',
+        `Logged in as ${targetRole.toUpperCase()} (${targetUser.name})`,
+        'success'
+      );
+      if (targetRole === 'patient') {
+        navigate('/patient-portal');
+      } else if (targetRole === 'pharmacy') {
+        navigate('/inventory');
+      } else {
+        navigate('/dashboard');
+      }
+    }, 400);
   };
 
   const handleQuickRole = (role: UserRole) => {
@@ -123,6 +158,45 @@ export const LoginView: React.FC = () => {
                 <User className="w-5 h-5 text-teal-700 mb-1" />
                 <div className="font-bold text-xs">Patient</div>
                 <div className="text-[10px] text-slate-500">Sarah M.</div>
+              </button>
+            </div>
+          </div>
+
+          {/* Demo Mode Credentials Helper Card */}
+          <div className="bg-emerald-50/80 border border-emerald-200/90 rounded-2xl p-3.5 text-xs text-emerald-950">
+            <div className="flex items-center justify-between mb-2">
+              <span className="font-extrabold uppercase tracking-wider text-[11px] text-emerald-800 flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                Demo Logins (Password: password123)
+              </span>
+              <span className="text-[10px] font-semibold bg-emerald-100/90 px-2 py-0.5 rounded-full text-emerald-800">
+                Mock Data Active
+              </span>
+            </div>
+            <div className="space-y-1.5 font-mono text-[11px]">
+              <button
+                type="button"
+                onClick={() => handleQuickRole('distributor')}
+                className="w-full flex items-center justify-between hover:bg-emerald-100/60 p-1.5 rounded-lg cursor-pointer transition-colors text-left"
+              >
+                <span className="font-sans font-medium text-slate-700">🛡️ Distributor:</span>
+                <span className="font-semibold text-emerald-900">thomas@medflowdistribution.co.za</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleQuickRole('pharmacy')}
+                className="w-full flex items-center justify-between hover:bg-emerald-100/60 p-1.5 rounded-lg cursor-pointer transition-colors text-left"
+              >
+                <span className="font-sans font-medium text-slate-700">🏥 Pharmacy:</span>
+                <span className="font-semibold text-emerald-900">eleanor.scott@medcentre.co.za</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleQuickRole('patient')}
+                className="w-full flex items-center justify-between hover:bg-emerald-100/60 p-1.5 rounded-lg cursor-pointer transition-colors text-left"
+              >
+                <span className="font-sans font-medium text-slate-700">👤 Patient:</span>
+                <span className="font-semibold text-emerald-900">sarah.meyer@wellnessmail.co.za</span>
               </button>
             </div>
           </div>
