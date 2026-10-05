@@ -58,6 +58,10 @@ The MedFlow application is continuously deployed across multi-tier Azure App Ser
   🔗 [https://medflow-app-dev.azurewebsites.net](https://medflow-app-dev.azurewebsites.net)  
   *Rapid-integration environment automatically updated upon pull request merges into `develop`.*
 
+* **Public Web Demonstration Mirror (GitHub Pages):**  
+  🔗 [https://tashiel-singh.github.io/WorthITSolutions-WIL-INSY7315-/](https://tashiel-singh.github.io/WorthITSolutions-WIL-INSY7315-/)  
+  *Public live demonstration mirror hosted via GitHub Pages with zero-credential public access.*
+
 ---
 
 ## 4. Frontend Architecture & Design System
