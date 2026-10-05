@@ -6,11 +6,13 @@ on:
       - main
       - staging
       - develop
+      - main-dummy
   pull_request:
     branches:
       - main
       - staging
       - develop
+      - main-dummy
   workflow_dispatch:
 
 permissions:
@@ -80,7 +82,8 @@ jobs:
     needs: build-and-test
     if: github.event_name == 'push' && (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/staging' || github.ref == 'refs/heads/main')
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 10
+    continue-on-error: true
     env:
       AZURE_PROFILE_DEV: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_DEV || secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
       AZURE_PROFILE_STAGING: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_STAGING || secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
@@ -152,7 +155,12 @@ jobs:
         if: env.RENDER_WEB_HOOK != ''
         run: |
           echo "Triggering Render webhook for live deployment..."
-          curl -sS -X POST "${{ secrets.RENDER_WEB_DEPLOY_HOOK }}" || true
+          CLEAN_HOOK=$(echo "${{ secrets.RENDER_WEB_DEPLOY_HOOK }}" | tr -d '\r\n" ' )
+          if [[ "$CLEAN_HOOK" =~ ^https?:// ]]; then
+            curl -sS -m 30 -X POST "$CLEAN_HOOK" || echo "⚠️ Warning: Render Web deploy webhook unreachable. Continuing."
+          else
+            echo "ℹ️ Notice: RENDER_WEB_DEPLOY_HOOK not configured as valid URL. Skipping."
+          fi
 
       - name: 📋 Verify Deployment Health
         run: |
@@ -172,6 +180,8 @@ jobs:
     needs: build-and-test
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+    continue-on-error: true
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}

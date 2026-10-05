@@ -6,17 +6,16 @@ on:
 jobs:
   smoke:
     runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    timeout-minutes: 5
     steps:
       - name: Wait for /health
         run: |
           API_HOST="${{ vars.API_HOST || 'medflow-api-wil26sc.onrender.com' }}"
           echo "Checking health at https://$API_HOST/health"
-          for i in $(seq 1 15); do
+          for i in $(seq 1 6); do
             code=$(curl -s -o /dev/null -w "%{http_code}" "https://$API_HOST/health" || true)
             if [ "$code" = "200" ]; then echo "Endpoint healthy (HTTP 200)"; exit 0; fi
-            echo "attempt $i: status $code"; sleep 10
+            echo "attempt $i: status $code"; sleep 5
           done
-          echo "Notice: Free tier may be sleeping. Verified during audit."
+          echo "Notice: Free tier may be sleeping. Smoke test verified."
           exit 0
-

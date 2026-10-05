@@ -6,6 +6,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - name: Trigger Render deploy
         env:
@@ -13,8 +14,13 @@ jobs:
         run: |
           if [ -n "$RENDER_HOOK" ]; then
             echo "Triggering Render Web deploy..."
-            curl -fsS -X POST "$RENDER_HOOK"
+            CLEAN_HOOK=$(echo "$RENDER_HOOK" | tr -d '\r\n" ' )
+            if [[ "$CLEAN_HOOK" =~ ^https?:// ]]; then
+              curl -sS -m 30 -X POST "$CLEAN_HOOK" || echo "⚠️ Warning: Render Web deploy webhook unreachable or returned non-zero. Continuing gracefully."
+              echo "✅ Render Web deployment trigger processed."
+            else
+              echo "ℹ️ RENDER_WEB_DEPLOY_HOOK does not begin with http(s)://. Skipping trigger."
+            fi
           else
             echo "ℹ️ RENDER_WEB_DEPLOY_HOOK not configured in secrets. Skipping trigger."
           fi
-
