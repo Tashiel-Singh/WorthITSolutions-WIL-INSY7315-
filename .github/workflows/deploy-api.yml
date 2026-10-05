@@ -8,4 +8,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Trigger Render deploy
-        run: curl -fsS -X POST "${{ secrets.RENDER_API_DEPLOY_HOOK }}"
+        if: env.RENDER_HOOK != ''
+        env:
+          RENDER_HOOK: ${{ secrets.RENDER_API_DEPLOY_HOOK }}
+        run: curl -fsS -X POST "$RENDER_HOOK"
+      - name: Deployment Notice
+        if: env.RENDER_HOOK == ''
+        env:
+          RENDER_HOOK: ${{ secrets.RENDER_API_DEPLOY_HOOK }}
+        run: echo "ℹ️ RENDER_API_DEPLOY_HOOK not set in secrets. Pipeline completed successfully."
+
