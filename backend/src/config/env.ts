@@ -2,7 +2,11 @@ import 'dotenv/config';
 
 export const env = {
   port: Number(process.env.PORT ?? 4000),
-  jwtSecret: process.env.JWT_SECRET || 'medflow-wil26sc-development-secure-jwt-secret-key-super-long-token',
+  jwtSecret: (() => {
+    const s = process.env.JWT_SECRET;
+    if (!s && process.env.NODE_ENV === 'production') throw new Error('JWT_SECRET is required in production');
+    return s || 'dev-only-insecure-secret-change-me-0123456789';
+  })(),
   jwtAccessExpires: process.env.JWT_ACCESS_EXPIRES ?? '15m', // spec: 15-minute access tokens
   refreshTokenDays: Number(process.env.REFRESH_TOKEN_DAYS ?? 7),
   bcryptCost: Number(process.env.BCRYPT_COST ?? 12), // spec: cost factor 12
