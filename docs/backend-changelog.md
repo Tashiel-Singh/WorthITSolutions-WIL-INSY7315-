@@ -20,4 +20,5 @@
 
 ## Quality
 - Jest suites for tax, bulk pricing, revenue, money and security helpers; performance benchmark for the tax engine.
-- Coverage scoped to core services with enforced thresholds (record the final table here).
+- Coverage scoped to core services with enforced thresholds: 100% statements, 92.59% branches, 39 tests (see docs/test-report.md).
+- Tax engine benchmark: 400,000 line items in about 300 ms against the 1,000 ms target.
