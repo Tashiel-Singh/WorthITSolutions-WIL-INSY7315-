@@ -67,3 +67,59 @@ stateDiagram-v2
     VOID --> [*]
 ```
 DRAFT exists in the enum but no code path sets it. OVERDUE is reachable only once the planned reminder job is built.
+
+## Design class diagram (service layer)
+```mermaid
+classDiagram
+    class ITaxStrategy {
+        <<interface>>
+        +String name
+        +calculateCents(input) int
+    }
+    class DepreciationStrategy {
+        -double rate
+    }
+    class OperatingExpenseStrategy {
+        -double rate
+    }
+    class BulkVatInputStrategy {
+        -double rate
+    }
+    class TaxCalculator {
+        -ITaxStrategy strategies
+        +calculate(input) TaxResult
+    }
+    class FormalTaxDeductionService {
+        +calculateTotalDeduction(assets, expenses, bulkRevenue) DeductionResult
+    }
+    class BulkOrderCalculationService {
+        +double VAT_RATE
+        +discountRateFor(quantity)$ double
+        +processBulkOrder(basePrice, quantity) BulkOrderResult
+    }
+    class RevenueSegregationService {
+        +aggregateRevenueByChannel(records) RevenueBreakdown
+    }
+    class MoneyHelpers {
+        <<module>>
+        +toCents(amount) int
+        +fromCents(cents) double
+        +assertMoney(value, label) void
+    }
+    class OrdersRouter
+    class TaxRouter
+    class AnalyticsRouter
+
+    ITaxStrategy <|.. DepreciationStrategy
+    ITaxStrategy <|.. OperatingExpenseStrategy
+    ITaxStrategy <|.. BulkVatInputStrategy
+    TaxCalculator o-- ITaxStrategy : delegates to
+    FormalTaxDeductionService --> TaxCalculator : uses
+    FormalTaxDeductionService ..> MoneyHelpers
+    BulkOrderCalculationService ..> MoneyHelpers
+    RevenueSegregationService ..> MoneyHelpers
+    TaxRouter ..> FormalTaxDeductionService
+    OrdersRouter ..> BulkOrderCalculationService
+    AnalyticsRouter ..> RevenueSegregationService
+```
+Rates: depreciation 0.20, operating expenses 0.15, bulk VAT input 0.05. Data entities are defined in backend/prisma/schema.prisma.
