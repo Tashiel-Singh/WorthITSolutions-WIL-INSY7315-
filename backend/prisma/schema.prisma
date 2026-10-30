@@ -46,6 +46,7 @@ enum InvoiceStatus {
   SENT
   OVERDUE
   PAID
+  VOID
 }
 
 enum PrescriberType {
