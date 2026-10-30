@@ -53,3 +53,17 @@ stateDiagram-v2
     CANCELLED --> [*]
 ```
 Cancellation is only allowed from PENDING or CONFIRMED, and is blocked once a payment exists on the invoice.
+
+## Invoice state diagram
+```mermaid
+stateDiagram-v2
+    [*] --> SENT : created with the order
+    SENT --> SENT : partial payment recorded
+    SENT --> PAID : payments equal invoice total
+    SENT --> VOID : order cancelled
+    SENT --> OVERDUE : due date passed - reminder job planned, not implemented
+    OVERDUE --> PAID : payments equal invoice total
+    PAID --> [*]
+    VOID --> [*]
+```
+DRAFT exists in the enum but no code path sets it. OVERDUE is reachable only once the planned reminder job is built.
