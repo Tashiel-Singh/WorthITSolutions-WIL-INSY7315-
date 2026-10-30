@@ -6,6 +6,16 @@ import { AppProvider } from '../context/AppContext';
 import { ToastProvider } from '../components/common/ToastContext';
 import { InventoryView } from '../views/InventoryView';
 import { getExpiryCountdown } from '../utils/formatters';
+import { vi, beforeAll, afterAll } from 'vitest';
+
+// Freeze only Date so expiry-countdown expectations do not drift with the real calendar
+beforeAll(() => {
+  vi.useFakeTimers({ toFake: ['Date'] });
+  vi.setSystemTime(new Date('2026-10-05T09:00:00Z'));
+});
+afterAll(() => {
+  vi.useRealTimers();
+});
 
 const renderWithProviders = (ui: React.ReactElement) => {
   return render(
