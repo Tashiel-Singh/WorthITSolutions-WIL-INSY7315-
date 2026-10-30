@@ -37,3 +37,19 @@ sequenceDiagram
 ```
 
 Difference from the design document: the invoice is created inside the same database transaction as the order (atomic), instead of in a separate decoupled invoice service.
+
+## Order state diagram
+```mermaid
+stateDiagram-v2
+    [*] --> CONFIRMED : POST /api/orders after stock is reserved
+    [*] --> PENDING : schema default status
+    PENDING --> CONFIRMED
+    PENDING --> CANCELLED : owner or owning pharmacy cancels
+    CONFIRMED --> PROCESSING : owner updates status
+    CONFIRMED --> CANCELLED : stock returned to BULK pool and invoice voided
+    PROCESSING --> SHIPPED
+    SHIPPED --> DELIVERED
+    DELIVERED --> [*]
+    CANCELLED --> [*]
+```
+Cancellation is only allowed from PENDING or CONFIRMED, and is blocked once a payment exists on the invoice.
