@@ -11,6 +11,7 @@ import {
   Receipt,
   UserCheck,
   ShieldCheck,
+  TrendingUp,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -31,6 +32,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
       icon: <LayoutDashboard className="w-4 h-4" />,
       allowedRoles: ['distributor'],
       description: 'KPIs & Revenue Segregation',
+    },
+    {
+      to: '/growth',
+      label: 'Growth & Kelly Engine',
+      icon: <TrendingUp className="w-4 h-4" />,
+      allowedRoles: ['distributor'],
+      description: 'Stochastic Capital Velocity',
     },
     {
       to: '/inventory',

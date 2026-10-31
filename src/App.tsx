@@ -9,6 +9,7 @@ import { InventoryView } from './views/InventoryView';
 import { BulkOrderView } from './views/BulkOrderView';
 import { InvoicesView } from './views/InvoicesView';
 import { PatientPortalView } from './views/PatientPortalView';
+import { GrowthEngineView } from './views/GrowthEngineView';
 import { UserRole } from './types';
 import { ShieldAlert } from 'lucide-react';
 import { Button } from './components/common/Button';
@@ -114,6 +115,17 @@ export const AppRoutes: React.FC = () => {
           <AppLayout>
             <RoleGuard allowedRoles={['distributor', 'patient']}>
               <PatientPortalView />
+            </RoleGuard>
+          </AppLayout>
+        }
+      />
+
+      <Route
+        path="/growth"
+        element={
+          <AppLayout>
+            <RoleGuard allowedRoles={['distributor']}>
+              <GrowthEngineView />
             </RoleGuard>
           </AppLayout>
         }

@@ -20,7 +20,7 @@ const renderWithProviders = (ui: React.ReactElement) => {
 describe('Dual-Pool Inventory Segregation & Expiry Tracking System', () => {
   it('correctly calculates expiry alert levels based on remaining shelf life', () => {
     // Current test date is October 2026
-    const alert30 = getExpiryCountdown('2026-11-01');
+    const alert30 = getExpiryCountdown(new Date(Date.now() + 25 * 86400000).toISOString().split('T')[0]);
     expect(alert30.level).toBe('warning-30');
     expect(alert30.label).toMatch(/\d+d left \(Notice\)/);
 

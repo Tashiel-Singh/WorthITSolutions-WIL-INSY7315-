@@ -12,9 +12,14 @@ import { invoicesRouter } from './routes/invoices';
 import { analyticsRouter } from './routes/analytics';
 import { taxRouter } from './routes/tax';
 import { patientsRouter } from './routes/patients';
+import { growthRouter } from './routes/growth';
 
 export const app = express();
 app.set('trust proxy', 1); // behind Azure Front Door
+
+app.use(helmet());
+app.use(express.json());
+
 const allowedOrigins = env.corsOrigin.split(',').map((s) => s.trim()).filter(Boolean);
 app.use(
   cors({
@@ -48,6 +53,10 @@ app.use('/api/invoices', invoicesRouter);
 app.use('/api/analytics', analyticsRouter);
 app.use('/api/tax', taxRouter);
 app.use('/api/patients', patientsRouter);
+
+// Quantitative Growth Engine endpoints (Step 1 Blueprint)
+app.use('/api/v1/growth', growthRouter);
+app.use('/api/growth', growthRouter);
 
 app.use(notFound);
 app.use(errorHandler);
