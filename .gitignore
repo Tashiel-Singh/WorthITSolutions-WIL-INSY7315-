@@ -1,0 +1,19 @@
+# Dependencies
+node_modules/
+
+# Build outputs & compiled JavaScript
+dist/
+build/
+src/**/*.js
+src/**/*.js.map
+src/**/*.d.ts
+src/**/*.d.ts.map
+
+# Testing & Coverage
+coverage/
+.jest/
+
+# Environment & Logs
+.env
+*.log
+.DS_Store
