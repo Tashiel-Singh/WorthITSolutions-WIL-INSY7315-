@@ -33,7 +33,83 @@ async function main() {
       { productId: created.id, poolType: 'RETAIL', quantityOnHand: 100, reorderThreshold: 20, expiryDate: exp },
     ] });
   }
-  console.log('Seeded. Owner:', owner.email, '(change passwords immediately outside dev)');
+
+  // Doctor (Prescriber)
+  const doctorUser = await prisma.user.upsert({
+    where: { email: 'dr.hendrik@medflow.test' }, update: {},
+    create: { email: 'dr.hendrik@medflow.test', passwordHash: await pw('DoctorPass123'), role: 'DOCTOR' },
+  });
+  await prisma.prescriber.upsert({
+    where: { userId: doctorUser.id }, update: {},
+    create: {
+      userId: doctorUser.id,
+      name: 'Dr. Hendrik van der Merwe',
+      hpcsaNumber: 'MP0492819',
+      type: 'DOCTOR',
+      practice: 'Cape Integrative Medical Practice',
+      specialization: 'Integrative Medicine & Chronic Pain',
+      commissionRate: 0.10,
+    },
+  });
+
+  // Psychiatrist (Prescriber)
+  const psychUser = await prisma.user.upsert({
+    where: { email: 'dr.nkosi@medflow.test' }, update: {},
+    create: { email: 'dr.nkosi@medflow.test', passwordHash: await pw('PsychPass123'), role: 'PSYCHIATRIST' },
+  });
+  await prisma.prescriber.upsert({
+    where: { userId: psychUser.id }, update: {},
+    create: {
+      userId: psychUser.id,
+      name: 'Dr. Thandi Nkosi',
+      hpcsaNumber: 'PS0128492',
+      type: 'PSYCHIATRIST',
+      practice: 'MindWellness Clinic',
+      specialization: 'Neuropsychiatry & Anxiety Disorders',
+      commissionRate: 0.12,
+    },
+  });
+
+  // Pharmacist (Prescriber)
+  const pharmacistUser = await prisma.user.upsert({
+    where: { email: 'sipho.pharmacist@medflow.test' }, update: {},
+    create: { email: 'sipho.pharmacist@medflow.test', passwordHash: await pw('PharmPass123'), role: 'PHARMACIST' },
+  });
+  await prisma.prescriber.upsert({
+    where: { userId: pharmacistUser.id }, update: {},
+    create: {
+      userId: pharmacistUser.id,
+      name: 'Sipho Dlamini',
+      hpcsaNumber: 'PC0098412',
+      type: 'PHARMACIST',
+      practice: 'Atlantic Seaboard Dispensary',
+      specialization: 'Natural Compounds & Pharmacology',
+      commissionRate: 0.08,
+    },
+  });
+
+  // Patient
+  const patientUser = await prisma.user.upsert({
+    where: { email: 'sarah.meyer@medflow.test' }, update: {},
+    create: { email: 'sarah.meyer@medflow.test', passwordHash: await pw('PatientPass123'), role: 'PATIENT' },
+  });
+  await prisma.patient.upsert({
+    where: { userId: patientUser.id }, update: {},
+    create: {
+      userId: patientUser.id,
+      name: 'Sarah Meyer',
+      dateOfBirth: new Date('1988-04-12'),
+      contactNumber: '+27 82 555 1928',
+    },
+  });
+
+  // Leisure Client
+  await prisma.user.upsert({
+    where: { email: 'chloe.leisure@medflow.test' }, update: {},
+    create: { email: 'chloe.leisure@medflow.test', passwordHash: await pw('LeisurePass123'), role: 'LEISURE_CLIENT' },
+  });
+
+  console.log('Seeded successfully with all 7 roles, dual inventory pools, and sample clinical entities.');
 }
 
 main().finally(() => prisma.$disconnect());
