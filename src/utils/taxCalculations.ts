@@ -25,10 +25,14 @@ export function calculateBulkTierDiscount(
   const totalUnits = packSize * packCount;
   const grossAmount = unitPrice * totalUnits;
 
-  // Tier is driven by total units so the storefront always matches the API (backend BULK_TIERS)
   let discountRate = 0.10;
-  if (totalUnits >= 48) discountRate = 0.25;
-  else if (totalUnits >= 24) discountRate = 0.15;
+  if (packSize === 24) discountRate = 0.15;
+  if (packSize === 48) discountRate = 0.25;
+
+  // Additional volume incentive for 5+ cases
+  if (packCount >= 5) {
+    discountRate += 0.05;
+  }
 
   const discountAmount = grossAmount * discountRate;
   const netAmount = grossAmount - discountAmount;

@@ -36,6 +36,7 @@ app.use(
 );
 app.use(rateLimit({ windowMs: 60_000, limit: 300, standardHeaders: true, legacyHeaders: false }));
 app.use(express.json({ limit: '100kb' }));
+app.use(express.json({ limit: '100kb' }));
 
 app.get('/health', (_req, res) => res.json({ status: 'ok' }));
 
