@@ -1,5 +1,13 @@
 /**
  * Authentication Portal with Multi-Role Preview & Inline Form Validation
+ * Supports all 7 MedFlow System Roles:
+ * 1. Distributor / Owner (Thomas)
+ * 2. Pharmacy Manager (Sr. Eleanor Scott)
+ * 3. Patient (Sarah Meyer)
+ * 4. Pharmacist (Tariq Moodley)
+ * 5. Doctor (Dr. Hendrik van der Merwe)
+ * 6. Psychiatrist (Dr. Marcus Vance)
+ * 7. Leisure / Wellness Client (Chloe Bennett)
  */
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -7,7 +15,19 @@ import { useApp } from '../context/AppContext';
 import { useToast } from '../components/common/ToastContext';
 import { Button } from '../components/common/Button';
 import { UserRole } from '../types';
-import { Activity, ShieldCheck, Building2, User, KeyRound, Mail, ArrowRight } from 'lucide-react';
+import {
+  Activity,
+  ShieldCheck,
+  Building2,
+  User,
+  KeyRound,
+  Mail,
+  ArrowRight,
+  Stethoscope,
+  Brain,
+  Percent,
+  Sparkles,
+} from 'lucide-react';
 
 import { initialUsers } from '../data/mockData';
 
@@ -60,6 +80,27 @@ export const LoginView: React.FC = () => {
       ) {
         targetRole = 'patient';
       } else if (
+        normalizedEmail.includes('tariq') ||
+        normalizedEmail.includes('pharmacist')
+      ) {
+        targetRole = 'pharmacist';
+      } else if (
+        normalizedEmail.includes('hendrik') ||
+        normalizedEmail.includes('doctor')
+      ) {
+        targetRole = 'doctor';
+      } else if (
+        normalizedEmail.includes('marcus') ||
+        normalizedEmail.includes('psychiatrist')
+      ) {
+        targetRole = 'psychiatrist';
+      } else if (
+        normalizedEmail.includes('chloe') ||
+        normalizedEmail.includes('leisure') ||
+        normalizedEmail.includes('lifestyle')
+      ) {
+        targetRole = 'leisure';
+      } else if (
         normalizedEmail.includes('thomas') ||
         normalizedEmail.includes('owner') ||
         normalizedEmail.includes('admin') ||
@@ -76,10 +117,18 @@ export const LoginView: React.FC = () => {
         `Logged in as ${targetRole.toUpperCase()} (${targetUser.name})`,
         'success'
       );
+
+      // Role-specific landing destinations
       if (targetRole === 'patient') {
         navigate('/patient-portal');
+      } else if (targetRole === 'pharmacist') {
+        navigate('/pharmacist-portal');
+      } else if (targetRole === 'doctor' || targetRole === 'psychiatrist') {
+        navigate('/prescriber-portal');
+      } else if (targetRole === 'leisure') {
+        navigate('/leisure-portal');
       } else if (targetRole === 'pharmacy') {
-        navigate('/inventory');
+        navigate('/bulk-order');
       } else {
         navigate('/dashboard');
       }
@@ -89,14 +138,18 @@ export const LoginView: React.FC = () => {
   const handleQuickRole = (role: UserRole) => {
     setSelectedRole(role);
     if (role === 'distributor') setEmail('thomas@medflowdistribution.co.za');
-    if (role === 'pharmacy') setEmail('eleanor.scott@medcentre.co.za');
-    if (role === 'patient') setEmail('sarah.meyer@wellnessmail.co.za');
+    else if (role === 'pharmacy') setEmail('eleanor.scott@medcentre.co.za');
+    else if (role === 'patient') setEmail('sarah.meyer@wellnessmail.co.za');
+    else if (role === 'pharmacist') setEmail('tariq.moodley@medflowdispensary.co.za');
+    else if (role === 'doctor') setEmail('dr.hendrik@capewellness.co.za');
+    else if (role === 'psychiatrist') setEmail('dr.marcus@mindhealthinstitute.co.za');
+    else if (role === 'leisure') setEmail('chloe.bennett@lifestylemail.co.za');
     setErrors({});
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-brand-950 to-slate-900 flex flex-col items-center justify-center p-4 sm:p-6">
-      <div className="w-full max-w-lg bg-white rounded-3xl shadow-elevated border border-slate-100 overflow-hidden">
+      <div className="w-full max-w-xl bg-white rounded-3xl shadow-elevated border border-slate-100 overflow-hidden">
         {/* Brand Header */}
         <div className="bg-gradient-to-r from-brand-900 via-brand-800 to-slateBlue-700 p-8 text-white text-center relative overflow-hidden">
           <div className="relative z-10 flex flex-col items-center">
@@ -105,7 +158,7 @@ export const LoginView: React.FC = () => {
             </div>
             <h1 className="text-2xl font-extrabold tracking-tight">MedFlow Distribution</h1>
             <p className="text-xs text-emerald-200 mt-1 font-medium tracking-wide uppercase">
-              Integrated B2B CBD & Homeopathic Supply Portal
+              Integrated B2B CBD & Homeopathic Supply Portal &bull; 7 Roles
             </p>
           </div>
         </div>
@@ -115,19 +168,19 @@ export const LoginView: React.FC = () => {
           {/* Quick Role Selection Preview */}
           <div>
             <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
-              Select Stakeholder Role
+              Select Stakeholder Persona (7 Roles)
             </label>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               <button
                 type="button"
                 onClick={() => handleQuickRole('distributor')}
-                className={`p-3 rounded-xl border text-left transition-all ${
+                className={`p-2.5 rounded-xl border text-left transition-all ${
                   selectedRole === 'distributor'
                     ? 'border-brand-700 bg-brand-50 text-brand-950 shadow-sm'
                     : 'border-slate-200 bg-slate-50/50 hover:bg-slate-100 text-slate-600'
                 }`}
               >
-                <ShieldCheck className="w-5 h-5 text-brand-700 mb-1" />
+                <ShieldCheck className="w-4 h-4 text-brand-700 mb-1" />
                 <div className="font-bold text-xs">Distributor</div>
                 <div className="text-[10px] text-slate-500">Thomas</div>
               </button>
@@ -135,72 +188,90 @@ export const LoginView: React.FC = () => {
               <button
                 type="button"
                 onClick={() => handleQuickRole('pharmacy')}
-                className={`p-3 rounded-xl border text-left transition-all ${
+                className={`p-2.5 rounded-xl border text-left transition-all ${
                   selectedRole === 'pharmacy'
                     ? 'border-slateBlue-700 bg-sky-50 text-slateBlue-900 shadow-sm'
                     : 'border-slate-200 bg-slate-50/50 hover:bg-slate-100 text-slate-600'
                 }`}
               >
-                <Building2 className="w-5 h-5 text-slateBlue-700 mb-1" />
+                <Building2 className="w-4 h-4 text-slateBlue-700 mb-1" />
                 <div className="font-bold text-xs">Pharmacy</div>
                 <div className="text-[10px] text-slate-500">Sr. Eleanor</div>
               </button>
 
               <button
                 type="button"
+                onClick={() => handleQuickRole('pharmacist')}
+                className={`p-2.5 rounded-xl border text-left transition-all ${
+                  selectedRole === 'pharmacist'
+                    ? 'border-emerald-700 bg-emerald-50 text-emerald-950 shadow-sm'
+                    : 'border-slate-200 bg-slate-50/50 hover:bg-slate-100 text-slate-600'
+                }`}
+              >
+                <Percent className="w-4 h-4 text-emerald-700 mb-1" />
+                <div className="font-bold text-xs">Pharmacist</div>
+                <div className="text-[10px] text-slate-500">Tariq (8.5%)</div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleQuickRole('doctor')}
+                className={`p-2.5 rounded-xl border text-left transition-all ${
+                  selectedRole === 'doctor'
+                    ? 'border-rose-700 bg-rose-50 text-rose-950 shadow-sm'
+                    : 'border-slate-200 bg-slate-50/50 hover:bg-slate-100 text-slate-600'
+                }`}
+              >
+                <Stethoscope className="w-4 h-4 text-rose-700 mb-1" />
+                <div className="font-bold text-xs">Doctor</div>
+                <div className="text-[10px] text-slate-500">Dr. Hendrik</div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleQuickRole('psychiatrist')}
+                className={`p-2.5 rounded-xl border text-left transition-all ${
+                  selectedRole === 'psychiatrist'
+                    ? 'border-purple-700 bg-purple-50 text-purple-950 shadow-sm'
+                    : 'border-slate-200 bg-slate-50/50 hover:bg-slate-100 text-slate-600'
+                }`}
+              >
+                <Brain className="w-4 h-4 text-purple-700 mb-1" />
+                <div className="font-bold text-xs">Psychiatrist</div>
+                <div className="text-[10px] text-slate-500">Dr. Marcus</div>
+              </button>
+
+              <button
+                type="button"
                 onClick={() => handleQuickRole('patient')}
-                className={`p-3 rounded-xl border text-left transition-all ${
+                className={`p-2.5 rounded-xl border text-left transition-all ${
                   selectedRole === 'patient'
                     ? 'border-teal-700 bg-teal-50 text-teal-900 shadow-sm'
                     : 'border-slate-200 bg-slate-50/50 hover:bg-slate-100 text-slate-600'
                 }`}
               >
-                <User className="w-5 h-5 text-teal-700 mb-1" />
+                <User className="w-4 h-4 text-teal-700 mb-1" />
                 <div className="font-bold text-xs">Patient</div>
                 <div className="text-[10px] text-slate-500">Sarah M.</div>
               </button>
-            </div>
-          </div>
 
-          {/* Demo Mode Credentials Helper Card */}
-          <div className="bg-emerald-50/80 border border-emerald-200/90 rounded-2xl p-3.5 text-xs text-emerald-950">
-            <div className="flex items-center justify-between mb-2">
-              <span className="font-extrabold uppercase tracking-wider text-[11px] text-emerald-800 flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                Demo Logins (Password: password123)
-              </span>
-              <span className="text-[10px] font-semibold bg-emerald-100/90 px-2 py-0.5 rounded-full text-emerald-800">
-                Mock Data Active
-              </span>
-            </div>
-            <div className="space-y-1.5 font-mono text-[11px]">
               <button
                 type="button"
-                onClick={() => handleQuickRole('distributor')}
-                className="w-full flex items-center justify-between hover:bg-emerald-100/60 p-1.5 rounded-lg cursor-pointer transition-colors text-left"
+                onClick={() => handleQuickRole('leisure')}
+                className={`p-2.5 rounded-xl border text-left transition-all col-span-2 sm:col-span-2 ${
+                  selectedRole === 'leisure'
+                    ? 'border-amber-700 bg-amber-50 text-amber-950 shadow-sm'
+                    : 'border-slate-200 bg-slate-50/50 hover:bg-slate-100 text-slate-600'
+                }`}
               >
-                <span className="font-sans font-medium text-slate-700">🛡️ Distributor:</span>
-                <span className="font-semibold text-emerald-900">thomas@medflowdistribution.co.za</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => handleQuickRole('pharmacy')}
-                className="w-full flex items-center justify-between hover:bg-emerald-100/60 p-1.5 rounded-lg cursor-pointer transition-colors text-left"
-              >
-                <span className="font-sans font-medium text-slate-700">🏥 Pharmacy:</span>
-                <span className="font-semibold text-emerald-900">eleanor.scott@medcentre.co.za</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => handleQuickRole('patient')}
-                className="w-full flex items-center justify-between hover:bg-emerald-100/60 p-1.5 rounded-lg cursor-pointer transition-colors text-left"
-              >
-                <span className="font-sans font-medium text-slate-700">👤 Patient:</span>
-                <span className="font-semibold text-emerald-900">sarah.meyer@wellnessmail.co.za</span>
+                <Sparkles className="w-4 h-4 text-amber-700 mb-1 inline mr-1" />
+                <span className="font-bold text-xs">Leisure / Wellness Client</span>
+                <span className="text-[10px] text-slate-500 ml-1.5">(Chloe Bennett)</span>
               </button>
             </div>
           </div>
 
+          {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4" noValidate>
             {/* Email Field */}
             <div>
@@ -274,7 +345,7 @@ export const LoginView: React.FC = () => {
               isLoading={isLoading}
               rightIcon={<ArrowRight className="w-4 h-4" />}
             >
-              Access Distribution Portal
+              Access MedFlow Portal as {selectedRole.toUpperCase()}
             </Button>
           </form>
 

@@ -13,6 +13,9 @@ import {
   StockPool,
   OrderStatus,
   RevenueDataPoint,
+  PharmacistReferral,
+  WellnessAppointment,
+  PaymentReminderAlert,
 } from '../types';
 import {
   initialUsers,
@@ -22,6 +25,9 @@ import {
   initialPrescriptions,
   initialStockTransfers,
   initialRevenueData,
+  initialPharmacistReferrals,
+  initialWellnessAppointments,
+  initialPaymentReminders,
 } from '../data/mockData';
 import { medflowApi, API_BASE_URL } from '../services/api';
 
@@ -31,6 +37,7 @@ interface AppContextType {
   currentUser: UserProfile;
   switchRole: (role: UserRole) => void;
   products: Product[];
+  addProduct: (product: Product) => void;
   reorderStock: (productId: string, pool: StockPool, quantity: number) => boolean;
   transferStock: (productId: string, quantity: number, reason: string, notes?: string) => { success: boolean; message: string };
   orders: Order[];
@@ -38,7 +45,14 @@ interface AppContextType {
   updateOrderStatus: (orderId: string, status: OrderStatus) => void;
   invoices: Invoice[];
   prescriptions: Prescription[];
+  createPrescription: (prescription: Omit<Prescription, 'id'>) => Prescription;
   requestPrescriptionRefill: (prescriptionId: string) => boolean;
+  referrals: PharmacistReferral[];
+  createReferral: (referral: Omit<PharmacistReferral, 'id' | 'referralCode' | 'timestamp' | 'commissionEarned'>) => PharmacistReferral;
+  appointments: WellnessAppointment[];
+  bookAppointment: (appointment: Omit<WellnessAppointment, 'id' | 'appointmentRef' | 'status'>) => WellnessAppointment;
+  paymentReminders: PaymentReminderAlert[];
+  dispatchReminderNotice: (invoiceId: string) => void;
   stockTransfers: StockTransferAudit[];
   revenueData: RevenueDataPoint[];
   activeStockPool: StockPool;
@@ -63,6 +77,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [orders, setOrders] = useState<Order[]>(initialOrders);
   const [invoices, setInvoices] = useState<Invoice[]>(initialInvoices);
   const [prescriptions, setPrescriptions] = useState<Prescription[]>(initialPrescriptions);
+  const [referrals, setReferrals] = useState<PharmacistReferral[]>(initialPharmacistReferrals);
+  const [appointments, setAppointments] = useState<WellnessAppointment[]>(initialWellnessAppointments);
+  const [paymentReminders, setPaymentReminders] = useState<PaymentReminderAlert[]>(initialPaymentReminders);
   const [stockTransfers, setStockTransfers] = useState<StockTransferAudit[]>(initialStockTransfers);
   const [revenueData] = useState<RevenueDataPoint[]>(initialRevenueData);
   const [activeStockPool, setActiveStockPool] = useState<StockPool>('bulk');
@@ -110,6 +127,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const switchRole = (role: UserRole) => {
     const user = initialUsers.find((u) => u.role === role) || initialUsers[0];
     setCurrentUser(user);
+  };
+
+  const addProduct = (newProd: Product) => {
+    setProducts((prev) => [newProd, ...prev]);
   };
 
   const reorderStock = (productId: string, pool: StockPool, quantity: number) => {
@@ -271,6 +292,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
+  const createPrescription = (rxData: Omit<Prescription, 'id'>): Prescription => {
+    const newRx: Prescription = {
+      ...rxData,
+      id: `rx-${Date.now()}`,
+    };
+    setPrescriptions((prev) => [newRx, ...prev]);
+    return newRx;
+  };
+
   const requestPrescriptionRefill = (prescriptionId: string) => {
     setPrescriptions((prev) =>
       prev.map((rx) => {
@@ -289,12 +319,51 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return true;
   };
 
+  const createReferral = (
+    refData: Omit<PharmacistReferral, 'id' | 'referralCode' | 'timestamp' | 'commissionEarned'>
+  ): PharmacistReferral => {
+    const rate = refData.commissionRate || 0.085;
+    const earned = Math.round(refData.orderAmount * rate * 100) / 100;
+    const newRef: PharmacistReferral = {
+      ...refData,
+      id: `ref-${Date.now()}`,
+      referralCode: `REF-${Math.floor(1000 + Math.random() * 9000)}`,
+      commissionRate: rate,
+      commissionEarned: earned,
+      timestamp: new Date().toISOString().replace('T', ' ').slice(0, 16),
+    };
+    setReferrals((prev) => [newRef, ...prev]);
+    return newRef;
+  };
+
+  const bookAppointment = (
+    aptData: Omit<WellnessAppointment, 'id' | 'appointmentRef' | 'status'>
+  ): WellnessAppointment => {
+    const newApt: WellnessAppointment = {
+      ...aptData,
+      id: `apt-${Date.now()}`,
+      appointmentRef: `APT-${Math.floor(2000 + Math.random() * 8000)}`,
+      status: 'Confirmed',
+    };
+    setAppointments((prev) => [newApt, ...prev]);
+    return newApt;
+  };
+
+  const dispatchReminderNotice = (invoiceId: string) => {
+    setPaymentReminders((prev) =>
+      prev.map((r) => (r.invoiceId === invoiceId ? { ...r, dispatchedNotice: true } : r))
+    );
+  };
+
   const resetAllData = () => {
     setProducts(initialProducts);
     setOrders(initialOrders);
     setInvoices(initialInvoices);
     setPrescriptions(initialPrescriptions);
     setStockTransfers(initialStockTransfers);
+    setReferrals(initialPharmacistReferrals);
+    setAppointments(initialWellnessAppointments);
+    setPaymentReminders(initialPaymentReminders);
   };
 
   return (
@@ -303,6 +372,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         currentUser,
         switchRole,
         products,
+        addProduct,
         reorderStock,
         transferStock,
         orders,
@@ -310,7 +380,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         updateOrderStatus,
         invoices,
         prescriptions,
+        createPrescription,
         requestPrescriptionRefill,
+        referrals,
+        createReferral,
+        appointments,
+        bookAppointment,
+        paymentReminders,
+        dispatchReminderNotice,
         stockTransfers,
         revenueData,
         activeStockPool,

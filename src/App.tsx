@@ -10,6 +10,10 @@ import { BulkOrderView } from './views/BulkOrderView';
 import { InvoicesView } from './views/InvoicesView';
 import { PatientPortalView } from './views/PatientPortalView';
 import { GrowthEngineView } from './views/GrowthEngineView';
+import { PrescriberPortalView } from './views/PrescriberPortalView';
+import { PharmacistPortalView } from './views/PharmacistPortalView';
+import { LeisureBookingView } from './views/LeisureBookingView';
+import { ReportsView } from './views/ReportsView';
 import { UserRole } from './types';
 import { ShieldAlert } from 'lucide-react';
 import { Button } from './components/common/Button';
@@ -115,6 +119,50 @@ export const AppRoutes: React.FC = () => {
           <AppLayout>
             <RoleGuard allowedRoles={['distributor', 'patient']}>
               <PatientPortalView />
+            </RoleGuard>
+          </AppLayout>
+        }
+      />
+
+      <Route
+        path="/prescriber-portal"
+        element={
+          <AppLayout>
+            <RoleGuard allowedRoles={['distributor', 'doctor', 'psychiatrist']}>
+              <PrescriberPortalView />
+            </RoleGuard>
+          </AppLayout>
+        }
+      />
+
+      <Route
+        path="/pharmacist-portal"
+        element={
+          <AppLayout>
+            <RoleGuard allowedRoles={['distributor', 'pharmacist']}>
+              <PharmacistPortalView />
+            </RoleGuard>
+          </AppLayout>
+        }
+      />
+
+      <Route
+        path="/leisure-portal"
+        element={
+          <AppLayout>
+            <RoleGuard allowedRoles={['distributor', 'leisure']}>
+              <LeisureBookingView />
+            </RoleGuard>
+          </AppLayout>
+        }
+      />
+
+      <Route
+        path="/reports"
+        element={
+          <AppLayout>
+            <RoleGuard allowedRoles={['distributor']}>
+              <ReportsView />
             </RoleGuard>
           </AppLayout>
         }

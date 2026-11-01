@@ -8,9 +8,8 @@ import { Card } from '../components/common/Card';
 import { Badge } from '../components/common/Badge';
 import { ConfirmationModal } from '../components/common/ConfirmationModal';
 import { getExpiryCountdown } from '../utils/formatters';
-import { StockPool, Product } from '../types';
+import { StockPool, Product, ProductCategory } from '../types';
 import {
-  Boxes,
   Search,
   ArrowRightLeft,
   Clock,
@@ -18,21 +17,39 @@ import {
   ShieldCheck,
   CheckCircle2,
   FileCheck2,
+  PackagePlus,
 } from 'lucide-react';
 
 export const InventoryView: React.FC = () => {
   const {
     products,
+    addProduct,
     reorderStock,
     transferStock,
     stockTransfers,
     setActiveStockPool,
+    currentUser,
   } = useApp();
   const { showToast } = useToast();
 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [poolFilter, setPoolFilter] = useState<'all' | 'retail' | 'bulk'>('all');
+
+  // Add Product Modal State
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [newSku, setNewSku] = useState('');
+  const [newName, setNewName] = useState('');
+  const [newCategory, setNewCategory] = useState<ProductCategory>('CBD Oils & Extracts');
+  const [newPotency, setNewPotency] = useState('1000mg Full Spectrum');
+  const [newPrice, setNewPrice] = useState(550);
+  const [newRetailStock, setNewRetailStock] = useState(25);
+  const [newBulkStock, setNewBulkStock] = useState(120);
+  const [newReorder, setNewReorder] = useState(20);
+  const [newBatch, setNewBatch] = useState('BT-2026-905');
+  const [newExpiry, setNewExpiry] = useState('2028-12-31');
+  const [newUnit, setNewUnit] = useState('Bottle');
+  const [newDesc, setNewDesc] = useState('');
 
   // Transfer Modal State
   const [transferTargetProduct, setTransferTargetProduct] = useState<Product | null>(null);
@@ -48,7 +65,18 @@ export const InventoryView: React.FC = () => {
   const [isReorderModalOpen, setIsReorderModalOpen] = useState(false);
 
   // Categories list
-  const categories = ['All', 'CBD Oils & Extracts', 'Tinctures', 'Capsules & Tablets', 'Topical Balms', 'Bulk Raw Compounds'];
+  const categories = [
+    'All',
+    'CBD Oils & Extracts',
+    'Tinctures',
+    'Capsules & Tablets',
+    'Topical Balms',
+    'CBD Edibles',
+    'Homeopathic Remedies',
+    'Homeopathic Creams',
+    'Homeopathic Drops',
+    'Bulk Raw Compounds',
+  ];
 
   // Filtered Products
   const filteredProducts = products.filter((p) => {
@@ -103,6 +131,41 @@ export const InventoryView: React.FC = () => {
     setIsReorderModalOpen(false);
   };
 
+  const handleCreateProduct = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newSku || !newName) return;
+
+    const newProd: Product = {
+      id: `prd-custom-${Date.now()}`,
+      name: newName,
+      sku: newSku.toUpperCase(),
+      category: newCategory,
+      potency: newPotency,
+      description: newDesc || `${newName} (${newPotency}) certified formulation`,
+      retailPrice: Number(newPrice),
+      bulkTierPrices: [
+        { packSize: 12, unitPrice: Math.round(newPrice * 0.9), discountPercentage: 10 },
+        { packSize: 24, unitPrice: Math.round(newPrice * 0.85), discountPercentage: 15 },
+        { packSize: 48, unitPrice: Math.round(newPrice * 0.75), discountPercentage: 25 },
+      ],
+      retailStock: Number(newRetailStock),
+      bulkStock: Number(newBulkStock),
+      reorderLevel: Number(newReorder),
+      expiryDate: newExpiry,
+      batchNumber: newBatch,
+      unit: newUnit,
+      packagingUnit: `${newUnit} Container`,
+      labCertified: true,
+      activeStatus: 'In Stock',
+    };
+
+    addProduct(newProd);
+    showToast('Product Catalog Updated', `SKU ${newProd.sku} (${newProd.name}) added to active inventory.`, 'success');
+    setIsAddModalOpen(false);
+    setNewSku('');
+    setNewName('');
+  };
+
   return (
     <div className="space-y-6 animate-in fade-in duration-150">
       {/* Header */}
@@ -116,44 +179,56 @@ export const InventoryView: React.FC = () => {
           </p>
         </div>
 
-        {/* Segmented Stock Pool Control */}
-        <div className="flex items-center gap-1 p-1 bg-slate-200/80 rounded-2xl border border-slate-300/80">
-          <button
-            onClick={() => {
-              setActiveStockPool('bulk');
-              setPoolFilter('bulk');
-            }}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-              poolFilter === 'bulk'
-                ? 'bg-brand-700 text-white shadow-sm'
-                : 'text-slate-700 hover:text-slate-950'
-            }`}
-          >
-            🔒 Bulk Reserve Pool
-          </button>
-          <button
-            onClick={() => {
-              setActiveStockPool('retail');
-              setPoolFilter('retail');
-            }}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-              poolFilter === 'retail'
-                ? 'bg-slateBlue-700 text-white shadow-sm'
-                : 'text-slate-700 hover:text-slate-950'
-            }`}
-          >
-            Direct Retail Pool
-          </button>
-          <button
-            onClick={() => setPoolFilter('all')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-              poolFilter === 'all'
-                ? 'bg-white text-slate-900 shadow-sm'
-                : 'text-slate-700 hover:text-slate-950'
-            }`}
-          >
-            All Pools
-          </button>
+        <div className="flex flex-wrap items-center gap-3">
+          {currentUser.role === 'distributor' && (
+            <button
+              onClick={() => setIsAddModalOpen(true)}
+              className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition-all shadow-sm flex items-center gap-1.5"
+            >
+              <PackagePlus className="w-4 h-4" />
+              <span>Add Product SKU</span>
+            </button>
+          )}
+
+          {/* Segmented Stock Pool Control */}
+          <div className="flex items-center gap-1 p-1 bg-slate-200/80 rounded-2xl border border-slate-300/80">
+            <button
+              onClick={() => {
+                setActiveStockPool('bulk');
+                setPoolFilter('bulk');
+              }}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                poolFilter === 'bulk'
+                  ? 'bg-brand-700 text-white shadow-sm'
+                  : 'text-slate-700 hover:text-slate-950'
+              }`}
+            >
+              🔒 Bulk Reserve Pool
+            </button>
+            <button
+              onClick={() => {
+                setActiveStockPool('retail');
+                setPoolFilter('retail');
+              }}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                poolFilter === 'retail'
+                  ? 'bg-slateBlue-700 text-white shadow-sm'
+                  : 'text-slate-700 hover:text-slate-950'
+              }`}
+            >
+              Direct Retail Pool
+            </button>
+            <button
+              onClick={() => setPoolFilter('all')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                poolFilter === 'all'
+                  ? 'bg-white text-slate-900 shadow-sm'
+                  : 'text-slate-700 hover:text-slate-950'
+              }`}
+            >
+              All Pools
+            </button>
+          </div>
         </div>
       </div>
 
@@ -164,65 +239,59 @@ export const InventoryView: React.FC = () => {
             <ShieldCheck className="w-5 h-5" />
           </div>
           <div>
-            <div className="text-sm font-bold text-brand-950">
-              Dual-Channel Cannibalization Shield Active
+            <div className="text-xs font-bold text-brand-950 uppercase tracking-wider flex items-center gap-2">
+              <span>Cannibalization Prevention Logic Active</span>
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
             </div>
-            <div className="text-xs text-brand-800">
-              Point-of-Sale retail sales are isolated from bulk clinic inventories. Stock transfers require explicit batch authorization.
-            </div>
+            <p className="text-xs text-brand-800 mt-0.5">
+              Bulk pharmacy orders draw exclusively from the Bulk Reserve Pool. Retail walk-ins draw from Direct Retail Pool.
+            </p>
           </div>
         </div>
-        <Badge variant="brand" size="md">
-          Protection: 100% Enforced
-        </Badge>
+        <div className="flex items-center gap-2">
+          <Badge variant="teal" size="sm">
+            54 Segregated SKUs
+          </Badge>
+          <Badge variant="neutral" size="sm">
+            Audit Enforced
+          </Badge>
+        </div>
       </div>
 
-      {/* Search & Category Filter Controls */}
-      <Card className="p-4 sm:p-5">
-        <div className="flex flex-col md:flex-row items-center gap-3">
-          {/* Search */}
-          <div className="relative flex-1 w-full">
-            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-              <Search className="w-4 h-4" />
-            </div>
+      {/* Search & Filter Bar */}
+      <Card className="p-4">
+        <div className="flex flex-col md:flex-row gap-3">
+          <div className="relative flex-1">
+            <Search className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
             <input
               type="text"
+              placeholder="Search product by name, SKU, or potency..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search product by name, SKU (e.g., CBD-FS-1000) or potency..."
-              className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:bg-white focus:border-brand-700 transition-colors"
+              className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:bg-white focus:border-brand-700"
             />
           </div>
 
-          {/* Category Dropdown */}
-          <div className="w-full md:w-64">
-            <select
-              value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
-              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-medium focus:bg-white focus:border-brand-700 transition-colors"
-            >
-              {categories.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 md:pb-0">
+            {categories.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setSelectedCategory(cat)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-colors ${
+                  selectedCategory === cat
+                    ? 'bg-slate-900 text-white shadow-sm'
+                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
           </div>
         </div>
       </Card>
 
-      {/* Real-Time Product Stock Segregation Table */}
+      {/* Inventory Master Table */}
       <Card className="p-0 overflow-hidden">
-        <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Boxes className="w-4 h-4 text-brand-700" />
-            <h2 className="text-sm font-bold text-slate-900">Current Product Inventories</h2>
-          </div>
-          <span className="text-xs text-slate-500 font-medium">
-            Showing {filteredProducts.length} of {products.length} products
-          </span>
-        </div>
-
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse text-xs sm:text-sm">
             <thead>
@@ -497,6 +566,189 @@ export const InventoryView: React.FC = () => {
             </div>
           </div>
         </ConfirmationModal>
+      )}
+
+      {/* Add New SKU Modal for Distributor */}
+      {isAddModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+          <div className="bg-white border border-slate-200 rounded-2xl max-w-xl w-full shadow-2xl p-6 text-slate-900 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-4 border-b border-slate-200">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-emerald-100 text-emerald-800 rounded-xl">
+                  <PackagePlus className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-slate-900">Add New Product SKU</h3>
+                  <p className="text-xs text-slate-500">Register botanical formulation into dual-pool repository</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsAddModalOpen(false)}
+                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg text-lg font-bold"
+              >
+                &times;
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateProduct} className="mt-4 space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">SKU Code</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. CBD-ISO-3000"
+                    value={newSku}
+                    onChange={(e) => setNewSku(e.target.value)}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono font-bold focus:bg-white focus:border-brand-700"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Category</label>
+                  <select
+                    value={newCategory}
+                    onChange={(e) => setNewCategory(e.target.value as ProductCategory)}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:bg-white focus:border-brand-700"
+                  >
+                    {categories.filter((c) => c !== 'All').map((c) => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Product Name</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Pure Botanical CBD Isolate 3000mg"
+                  value={newName}
+                  onChange={(e) => setNewName(e.target.value)}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:bg-white focus:border-brand-700"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Potency / Dilution</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. 3000mg Isolate (99.8%)"
+                    value={newPotency}
+                    onChange={(e) => setNewPotency(e.target.value)}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:bg-white focus:border-brand-700"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Direct Retail Price (ZAR)</label>
+                  <input
+                    type="number"
+                    min="10"
+                    step="5"
+                    value={newPrice}
+                    onChange={(e) => setNewPrice(Number(e.target.value))}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold focus:bg-white focus:border-brand-700"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Bulk Reserve</label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={newBulkStock}
+                    onChange={(e) => setNewBulkStock(Number(e.target.value))}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-brand-700"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Retail Pool</label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={newRetailStock}
+                    onChange={(e) => setNewRetailStock(Number(e.target.value))}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slateBlue-700"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Reorder Level</label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={newReorder}
+                    onChange={(e) => setNewReorder(Number(e.target.value))}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Batch Number</label>
+                  <input
+                    type="text"
+                    value={newBatch}
+                    onChange={(e) => setNewBatch(e.target.value)}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Expiry Date</label>
+                  <input
+                    type="date"
+                    value={newExpiry}
+                    onChange={(e) => setNewExpiry(e.target.value)}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Unit of Measure</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Bottle, Box, Jar"
+                    value={newUnit}
+                    onChange={(e) => setNewUnit(e.target.value)}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Clinical Notes / Description</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Organic certified formulation"
+                    value={newDesc}
+                    onChange={(e) => setNewDesc(e.target.value)}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs"
+                  />
+                </div>
+              </div>
+
+              <div className="pt-4 flex items-center justify-end gap-3 border-t border-slate-200">
+                <button
+                  type="button"
+                  onClick={() => setIsAddModalOpen(false)}
+                  className="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition-all shadow-sm flex items-center gap-1.5"
+                >
+                  <PlusCircle className="w-4 h-4" />
+                  <span>Ingest SKU into Catalog</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
     </div>
   );

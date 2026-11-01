@@ -1,5 +1,6 @@
 /**
  * Ergonomic Sidebar Navigation with Desktop Sticky & Mobile Drawer Modes
+ * Supports All 7 MedFlow Roles with Role-Specific Visual Indication
  */
 import React from 'react';
 import { NavLink } from 'react-router-dom';
@@ -12,6 +13,10 @@ import {
   UserCheck,
   ShieldCheck,
   TrendingUp,
+  Stethoscope,
+  Percent,
+  Sparkles,
+  FileSpreadsheet,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -66,11 +71,41 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
       description: 'SARS 15% VAT Invoicing',
     },
     {
+      to: '/prescriber-portal',
+      label: 'Clinical Prescriber Portal',
+      icon: <Stethoscope className="w-4 h-4" />,
+      allowedRoles: ['distributor', 'doctor', 'psychiatrist'],
+      description: 'Condition-Tagged Scripts',
+    },
+    {
+      to: '/pharmacist-portal',
+      label: 'Pharmacist Dispensary',
+      icon: <Percent className="w-4 h-4" />,
+      allowedRoles: ['distributor', 'pharmacist'],
+      badge: '8.5%',
+      badgeColor: 'bg-emerald-950 text-emerald-300 border-emerald-800',
+      description: 'Referrals & Commissions',
+    },
+    {
       to: '/patient-portal',
       label: 'Patient Portal',
       icon: <UserCheck className="w-4 h-4" />,
       allowedRoles: ['distributor', 'patient'],
-      description: 'Prescriptions & Refill Triggers',
+      description: 'Prescriptions & Refill Reminders',
+    },
+    {
+      to: '/leisure-portal',
+      label: 'Leisure & Wellness',
+      icon: <Sparkles className="w-4 h-4" />,
+      allowedRoles: ['distributor', 'leisure'],
+      description: 'Lifestyle Consultations',
+    },
+    {
+      to: '/reports',
+      label: 'Reports & Audit Ledger',
+      icon: <FileSpreadsheet className="w-4 h-4" />,
+      allowedRoles: ['distributor'],
+      description: 'RFC 4180 CSV & Compliance',
     },
   ];
 
@@ -108,7 +143,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         {/* Role Identity Card */}
         <div className="mx-3 my-3 p-3 rounded-xl bg-slate-800/60 border border-slate-700/60">
           <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center justify-between">
-            <span>Current Role View</span>
+            <span>Role: <strong className="text-emerald-400 uppercase">{currentUser.role}</strong></span>
             <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
           </div>
           <div className="text-xs font-bold text-white truncate">{currentUser.name}</div>
@@ -118,7 +153,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         {/* Navigation Links */}
         <nav className="flex-1 px-3 py-2 space-y-1 overflow-y-auto" aria-label="Portal Navigation">
           <div className="px-3 py-1.5 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-            Core Portals
+            Enterprise Modules
           </div>
 
           {navItems.map((item) => {
@@ -129,18 +164,18 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                 to={item.to}
                 onClick={onClose}
                 className={({ isActive }) =>
-                  `flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-medium transition-all group ${
+                  `flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-all group ${
                     isActive
                       ? 'bg-emerald-600 text-white font-bold shadow-sm'
                       : isRoleAuthorized
                       ? 'text-slate-300 hover:text-white hover:bg-slate-800/80'
-                      : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800/40 opacity-70'
+                      : 'text-slate-600 hover:text-slate-400 hover:bg-slate-800/30 opacity-60'
                   }`
                 }
               >
                 <div className="flex items-center gap-3">
                   <span className="flex-shrink-0">{item.icon}</span>
-                  <span>{item.label}</span>
+                  <span className="truncate">{item.label}</span>
                 </div>
                 {item.badge && (
                   <span
@@ -164,8 +199,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
             <span className="text-emerald-400 font-bold">Compliant</span>
           </div>
           <div className="flex items-center justify-between text-slate-500 text-[10px]">
-            <span>Version 2.0 (WIL Task 2)</span>
-            <span>Tashiel Singh</span>
+            <span>MedFlow Enterprise 7-Role</span>
+            <span>v2.0</span>
           </div>
         </div>
       </aside>

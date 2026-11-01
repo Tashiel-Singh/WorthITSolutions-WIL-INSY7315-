@@ -1,8 +1,17 @@
 /**
  * MedFlow Enterprise Domain Types & Interface Definitions
+ * Full 7-Role Architecture, 50+ SKU Categories, Prescriber Condition Tagging,
+ * Pharmacist Referral Ledger, and Wellness Appointments.
  */
 
-export type UserRole = 'distributor' | 'pharmacy' | 'patient';
+export type UserRole =
+  | 'distributor'
+  | 'pharmacy'
+  | 'patient'
+  | 'pharmacist'
+  | 'doctor'
+  | 'psychiatrist'
+  | 'leisure';
 
 export interface UserProfile {
   id: string;
@@ -15,13 +24,21 @@ export interface UserProfile {
   vatNumber?: string;
   creditLimit?: number;
   creditUsed?: number;
+  hpcsaNumber?: string;
+  practiceNumber?: string;
+  specialization?: string;
+  commissionRate?: number;
 }
 
-export type ProductCategory = 
+export type ProductCategory =
   | 'CBD Oils & Extracts'
   | 'Tinctures'
   | 'Capsules & Tablets'
   | 'Topical Balms'
+  | 'CBD Edibles'
+  | 'Homeopathic Remedies'
+  | 'Homeopathic Creams'
+  | 'Homeopathic Drops'
   | 'Bulk Raw Compounds';
 
 export type StockPool = 'retail' | 'bulk';
@@ -67,7 +84,7 @@ export interface BulkOrderItem {
   netTotal: number;
 }
 
-export type OrderStatus = 'Pending' | 'Confirmed' | 'Processing' | 'Shipped' | 'Delivered';
+export type OrderStatus = 'Pending' | 'Confirmed' | 'Processing' | 'Shipped' | 'Delivered' | 'Cancelled';
 
 export interface Order {
   id: string;
@@ -117,14 +134,26 @@ export interface Invoice {
   items: InvoiceItem[];
 }
 
+export type ConditionTag =
+  | 'Anxiety & Panic'
+  | 'Chronic Neuropathic Pain'
+  | 'Sleep Disorders & Insomnia'
+  | 'Arthritic Inflammation'
+  | 'Post-Traumatic Stress (PTSD)'
+  | 'Digestive Dysbiosis'
+  | 'Stress & Autonomic Fatigue';
+
 export interface Prescription {
   id: string;
   prescriptionNumber: string;
   patientId: string;
   patientName: string;
   prescribingDoctor: string;
+  prescriberHpcsa?: string;
   clinicName: string;
   productName: string;
+  productId?: string;
+  conditionTag?: ConditionTag;
   dosage: string;
   instructions: string;
   prescribedQuantity: number;
@@ -132,6 +161,42 @@ export interface Prescription {
   issuedDate: string;
   refillDueDate: string;
   status: 'Active' | 'Refill Due' | 'Completed';
+  clinicalOutcomeNotes?: string;
+}
+
+export interface PharmacistReferral {
+  id: string;
+  referralCode: string;
+  pharmacistId: string;
+  pharmacistName: string;
+  pharmacistHpcsa: string;
+  patientName: string;
+  patientContact: string;
+  prescribedTherapy: string;
+  orderAmount: number;
+  commissionRate: number; // e.g. 0.085 (8.5%)
+  commissionEarned: number;
+  status: 'Approved' | 'Pending Verification' | 'Settled';
+  timestamp: string;
+}
+
+export interface WellnessAppointment {
+  id: string;
+  appointmentRef: string;
+  clientName: string;
+  clientEmail: string;
+  clientPhone: string;
+  consultationType:
+    | 'CBD Phytocannabinoid Assessment'
+    | 'Homeopathic Constitution Intake'
+    | 'Stress & Sleep Lifestyle Routine'
+    | 'Holistic Pain Recovery Session';
+  practitioner: string;
+  date: string;
+  timeSlot: string;
+  status: 'Confirmed' | 'Completed' | 'Rescheduled' | 'Cancelled';
+  notes: string;
+  wellnessProductRecommendations: string[];
 }
 
 export interface StockTransferAudit {
@@ -162,4 +227,16 @@ export interface RevenueSegregationSplit {
   percentage: number;
   amount: number;
   color: string;
+}
+
+export interface PaymentReminderAlert {
+  invoiceId: string;
+  invoiceNumber: string;
+  clientName: string;
+  dueDate: string;
+  daysRemaining: number;
+  alertTier: 'notice-7d' | 'urgent-3d' | 'final-1d' | 'overdue';
+  amount: number;
+  badgeLabel: string;
+  dispatchedNotice: boolean;
 }
