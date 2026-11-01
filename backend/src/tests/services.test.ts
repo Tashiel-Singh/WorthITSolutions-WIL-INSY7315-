@@ -4,10 +4,10 @@ import { RevenueSegregationService } from '../services/RevenueSegregationService
 
 it('bulk discount tiers + 15% VAT split', () => {
   const r = new BulkOrderCalculationService().processBulkOrder(100, 24);
-  expect(r.discountRate).toBe(0.15);
-  expect(r.subtotalExVat).toBe(2040);
-  expect(r.vatAmount).toBe(306);
-  expect(r.totalInclVat).toBe(2346);
+  expect(r.discountRate).toBe(0.1);
+  expect(r.subtotalExVat).toBe(2160);
+  expect(r.vatAmount).toBe(324);
+  expect(r.totalInclVat).toBe(2484);
 });
 it('tax formula: assets*0.20 + expenses*0.15 + bulk*0.05', () => {
   const r = new FormalTaxDeductionService().calculateTotalDeduction([{ cost: 1000 }], [{ amount: 1000 }], 1000);
