@@ -37,8 +37,12 @@ export const Header: React.FC<HeaderProps> = ({ onToggleSidebar, isSidebarOpen }
   const [isRetrying, setIsRetrying] = useState(false);
 
   const handleResetData = () => {
+    try {
+      localStorage.clear();
+      sessionStorage.clear();
+    } catch {}
     resetAllData();
-    showToast('Demo State Reset', 'Restored all inventory counts, orders, and invoices to initial state.', 'success');
+    showToast('Demo State Reset (Ctrl+Shift+R)', 'Cleared local storage and restored all inventory counts, orders, and invoices to initial state.', 'success');
   };
 
   const handleRefreshBackend = async () => {
@@ -122,15 +126,16 @@ export const Header: React.FC<HeaderProps> = ({ onToggleSidebar, isSidebarOpen }
             </span>
           </button>
 
-          {/* Quick Prototype Data Reset */}
+          {/* Quick Prototype Data Reset with Ctrl+Shift+R */}
           <button
             onClick={handleResetData}
-            title="Reset demonstration data"
+            title="Reset demonstration data & clear local storage (Shortcut: Ctrl + Shift + R)"
             aria-label="Reset prototype data to default seed state"
-            className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 text-xs text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl border border-slate-200/80 transition-colors focus-visible:ring-2 focus-visible:ring-brand-700"
+            className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 text-xs text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl border border-slate-200/80 transition-colors focus-visible:ring-2 focus-visible:ring-brand-700 shadow-sm"
           >
-            <RotateCcw className="w-3.5 h-3.5 text-slate-400" />
-            <span className="font-medium">Reset Data</span>
+            <RotateCcw className="w-3.5 h-3.5 text-brand-600" />
+            <span className="font-semibold text-slate-700">Reset Demo</span>
+            <kbd className="hidden lg:inline-block text-[10px] bg-slate-100 text-slate-500 px-1 py-0.5 rounded font-mono border border-slate-200">Ctrl+Shift+R</kbd>
           </button>
 
           {/* Evaluation Role Switcher */}

@@ -21,8 +21,8 @@ export const PharmacistPortalView: React.FC = () => {
   const { addToast } = useToast();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [patientName, setPatientName] = useState('');
-  const [patientContact, setPatientContact] = useState('');
+  const [patientName, setPatientName] = useState('Willem de Klerk');
+  const [patientContact, setPatientContact] = useState('+27 83 491 8201');
   const [selectedProduct, setSelectedProduct] = useState(products[0]?.name || 'Full Spectrum CBD Oil 1000mg');
   const [orderAmount, setOrderAmount] = useState(1200);
 

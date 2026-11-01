@@ -14,6 +14,7 @@ import {
   Search,
   Eye,
   Printer,
+  Download,
   ShieldCheck,
   X,
 } from 'lucide-react';
@@ -58,6 +59,95 @@ export const InvoicesView: React.FC = () => {
     } else {
       setSelectedInvoice(invoices[0]);
     }
+  };
+
+  const handleDownloadInvoice = (inv: Invoice) => {
+    const htmlContent = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>MedFlow Tax Invoice - ${inv.invoiceNumber}</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 40px; color: #1e293b; background: #fff; }
+    .header { display: flex; justify-content: space-between; border-bottom: 2px solid #cbd5e1; padding-bottom: 20px; }
+    .title { font-size: 22px; font-weight: bold; color: #0f172a; }
+    .badge { background: #0f172a; color: #fff; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; }
+    .meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin: 24px 0; }
+    table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+    th { background: #f8fafc; text-align: left; padding: 10px; font-size: 12px; border-bottom: 2px solid #e2e8f0; }
+    td { padding: 10px; border-bottom: 1px solid #e2e8f0; font-size: 12px; }
+    .totals { margin-top: 24px; width: 340px; margin-left: auto; }
+    .total-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px; }
+    .grand-total { font-size: 16px; font-weight: bold; border-top: 2px solid #0f172a; padding-top: 10px; color: #047857; }
+    .settlement { margin-top: 30px; padding: 16px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0; font-size: 11px; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div>
+      <div class="title">MedFlow Distribution (Pty) Ltd</div>
+      <div>122 Main Road, Stone Industrial Park, Cape Town, 8001</div>
+      <div>VAT Registration No: <strong>ZA4890219482</strong></div>
+    </div>
+    <div style="text-align: right;">
+      <span class="badge">TAX INVOICE</span>
+      <div style="font-size: 18px; font-weight: bold; margin-top: 8px;">${inv.invoiceNumber}</div>
+      <div>Order Ref: <strong>${inv.orderNumber}</strong></div>
+    </div>
+  </div>
+  <div class="meta-grid">
+    <div>
+      <div style="font-weight: bold; text-transform: uppercase; font-size: 11px; color: #64748b;">Billed To:</div>
+      <div style="font-size: 14px; font-weight: bold; margin-top: 4px;">${inv.clientName}</div>
+      <div>${inv.clientAddress}</div>
+      <div>Client VAT: ${inv.clientVatNumber}</div>
+    </div>
+    <div style="text-align: right;">
+      <div>Issue Date: <strong>${inv.issueDate}</strong></div>
+      <div>Due Date: <strong style="color: #047857;">${inv.dueDate} (30 Days Net)</strong></div>
+      <div>Status: <strong>${inv.status}</strong></div>
+    </div>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>Description</th>
+        <th style="text-align: center;">Qty</th>
+        <th style="text-align: right;">Unit Price (Excl)</th>
+        <th style="text-align: right;">Total (Excl)</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${inv.items.map(it => `<tr>
+        <td>${it.description}</td>
+        <td style="text-align: center;">${it.quantity}</td>
+        <td style="text-align: right;">R${it.unitPrice.toFixed(2)}</td>
+        <td style="text-align: right;">R${it.total.toFixed(2)}</td>
+      </tr>`).join('')}
+    </tbody>
+  </table>
+  <div class="totals">
+    <div class="total-row"><span>Gross Subtotal:</span><span>R${inv.grossSubtotal.toFixed(2)}</span></div>
+    ${inv.discountAmount > 0 ? `<div class="total-row" style="color: #047857;"><span>Volume Discount:</span><span>-R${inv.discountAmount.toFixed(2)}</span></div>` : ''}
+    <div class="total-row"><span>Net Subtotal:</span><span>R${inv.netSubtotal.toFixed(2)}</span></div>
+    <div class="total-row" style="font-weight: bold;"><span>South African VAT (15%):</span><span>R${inv.vatAmount.toFixed(2)}</span></div>
+    <div class="total-row grand-total"><span>Total Amount Due:</span><span>R${inv.totalAmount.toFixed(2)}</span></div>
+  </div>
+  <div class="settlement">
+    <strong>Settlement Instructions:</strong> Bank: Standard Bank • Account No: 0284910482 • Branch: 051001 • Reference: ${inv.invoiceNumber}
+  </div>
+</body>
+</html>`;
+    const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `MedFlow-Tax-Invoice-${inv.invoiceNumber}.html`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast('Invoice Downloaded', `Saved standalone Tax Invoice ${inv.invoiceNumber} locally.`, 'success');
   };
 
   const handlePrintPdf = () => {
@@ -328,6 +418,14 @@ export const InvoicesView: React.FC = () => {
                 </span>
               </div>
               <div className="flex items-center gap-2">
+                <Button
+                  variant="primary"
+                  size="sm"
+                  leftIcon={<Download className="w-3.5 h-3.5" />}
+                  onClick={() => handleDownloadInvoice(selectedInvoice)}
+                >
+                  Download Invoice
+                </Button>
                 <Button
                   variant="outline"
                   size="sm"

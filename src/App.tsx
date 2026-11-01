@@ -187,6 +187,21 @@ export const AppRoutes: React.FC = () => {
 };
 
 export const App: React.FC = () => {
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'R' || e.key === 'r')) {
+        e.preventDefault();
+        try {
+          localStorage.clear();
+          sessionStorage.clear();
+        } catch {}
+        window.location.reload();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   return (
     <BrowserRouter>
       <AppProvider>

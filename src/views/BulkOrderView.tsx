@@ -41,8 +41,8 @@ export const BulkOrderView: React.FC = () => {
 
   // Track order quantities: { [productId]: { packSize: 12 | 24 | 48, packCount: number } }
   const [orderPacks, setOrderPacks] = useState<Record<string, { packSize: 12 | 24 | 48; packCount: number }>>({
-    'PRD-CBD-001': { packSize: 24, packCount: 2 }, // 48 units
-    'PRD-HOM-001': { packSize: 24, packCount: 1 }, // 24 units
+    'PRD-MED-001': { packSize: 24, packCount: 2 }, // 48 units
+    'PRD-MED-039': { packSize: 12, packCount: 2 }, 'PRD-MED-003': { packSize: 48, packCount: 1 }, // 24 units
   });
 
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);

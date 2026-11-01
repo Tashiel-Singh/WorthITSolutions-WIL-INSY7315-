@@ -363,7 +363,7 @@ export function GrowthDashboard() {
               </div>
 
               <div className="h-72 w-full">
-                <ResponsiveContainer width="100%" height="100%">
+                <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={260}>
                   <LineChart data={report.simulationTrajectories}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                     <XAxis dataKey="month" stroke="#64748b" fontSize={11} />
