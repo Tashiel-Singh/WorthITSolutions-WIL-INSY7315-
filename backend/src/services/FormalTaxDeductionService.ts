@@ -1,11 +1,10 @@
-import {
-  ITaxStrategy,
-  TaxAsset,
-  TaxExpense,
-  TaxInput,
-  TaxCalculator,
-  defaultTaxStrategies,
-} from './TaxStrategies';
+/**
+ * Tax deduction engine (WIL doc 3.1.A):
+ *   Total = (sum depreciable assets x 0.20) + (sum operational expenses x 0.15) + (bulk revenue x 0.05)
+ * Implemented with the Strategy pattern (see TaxStrategies.ts). Public API is unchanged.
+ */
+import { fromCents } from '../lib/money';
+import { ITaxStrategy, TaxAsset, TaxCalculator, TaxExpense, TaxInput, defaultTaxStrategies } from './TaxStrategies';
 
 export type { TaxAsset, TaxExpense, TaxInput, ITaxStrategy };
 
@@ -14,7 +13,7 @@ export interface DeductionResult {
   expenseDeduction: number;
   vatInputDeduction: number;
   totalDeduction: number;
-  effectiveShieldPct: number;
+  effectiveShieldPct?: number;
 }
 
 export class FormalTaxDeductionService {
@@ -24,24 +23,17 @@ export class FormalTaxDeductionService {
     this.calculator = new TaxCalculator(strategies);
   }
 
-  calculateTotalDeduction(
-    assets: TaxAsset[],
-    expenses: TaxExpense[],
-    bulkRevenue = 0
-  ): DeductionResult {
+  calculateTotalDeduction(assets: TaxAsset[], expenses: TaxExpense[], bulkRevenue = 0): DeductionResult {
     if (!Array.isArray(assets) || !Array.isArray(expenses)) {
-      throw new TypeError('Assets and expenses must be provided as arrays.');
+      throw new TypeError('assets and expenses must be arrays');
     }
-
-    const { parts, totalDeduction, effectiveShieldPct } =
-      this.calculator.calculate({ assets, expenses, bulkRevenue });
+    const { parts, totalCents } = this.calculator.calculate({ assets, expenses, bulkRevenue });
 
     return {
-      depreciationDeduction: parts['depreciation'] ?? 0,
-      expenseDeduction: parts['operating-expenses'] ?? 0,
-      vatInputDeduction: parts['bulk-vat-input'] ?? 0,
-      totalDeduction,
-      effectiveShieldPct,
+      depreciationDeduction: fromCents(parts['depreciation'] ?? 0),
+      expenseDeduction: fromCents(parts['operating-expenses'] ?? 0),
+      vatInputDeduction: fromCents(parts['bulk-vat-input'] ?? 0),
+      totalDeduction: fromCents(totalCents),
     };
   }
 }

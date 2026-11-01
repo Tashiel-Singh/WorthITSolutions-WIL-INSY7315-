@@ -108,7 +108,7 @@ ordersRouter.post('/', requireRole(...STAFF), validate(createSchema), asyncHandl
     const invoice = await tx.invoice.create({ data: { orderId: order.id, vatAmount: vat, totalAmount: subtotal.add(vat), dueDate: due, status: 'SENT' } });
     await tx.transaction.create({ data: { orderId: order.id, channel: 'PHARMACY', amount: subtotal, bulkRevenue: subtotal, quantity: totalQty, description: `Bulk order ${order.id}` } });
     return { order, invoice };
-  });
+  }, { timeout: 15000, maxWait: 10000 });
 
   await audit(req, 'CREATE', 'Order', result.order.id, { total: result.invoice.totalAmount.toString() });
   res.status(201).json(result);
@@ -135,16 +135,18 @@ ordersRouter.patch('/:id/status', requireRole('OWNER'), validate(idParam, 'param
 // POST /api/orders/:id/cancel  (OWNER or the owning pharmacy; only PENDING/CONFIRMED) - returns stock to BULK pool
 ordersRouter.post('/:id/cancel', requireRole(...STAFF), validate(idParam, 'params'), asyncHandler(async (req, res) => {
   const cancelled = await prisma.$transaction(async tx => {
-    const o = await tx.order.findFirst({ where: { id: req.params.id, ...scope(req) }, include: { items: true } });
+    const o = await tx.order.findFirst({ where: { id: req.params.id, ...scope(req) }, include: { items: true, invoice: { include: { payments: true } } } });
     if (!o) throw new HttpError(404, 'Order not found');
     if (!['PENDING', 'CONFIRMED'].includes(o.status)) throw new HttpError(409, 'Order can no longer be cancelled in the system');
+    if (o.invoice && o.invoice.payments.length > 0) throw new HttpError(409, 'A payment is recorded against this order invoice; reverse it before cancelling');
     for (const item of o.items) {
       const pool = await tx.inventoryItem.findFirst({ where: { productId: item.productId, poolType: 'BULK' }, orderBy: { expiryDate: 'asc' } });
       if (pool) await tx.inventoryItem.update({ where: { id: pool.id }, data: { quantityOnHand: { increment: item.quantity } } });
     }
     await tx.transaction.deleteMany({ where: { orderId: o.id } });
+    if (o.invoice) await tx.invoice.update({ where: { id: o.invoice.id }, data: { status: 'VOID' } });
     return tx.order.update({ where: { id: o.id }, data: { status: 'CANCELLED' } });
-  });
+  }, { timeout: 15000, maxWait: 10000 });
   await audit(req, 'CANCEL', 'Order', cancelled.id);
   res.json(cancelled);
 }));

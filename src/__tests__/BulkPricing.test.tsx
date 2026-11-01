@@ -19,12 +19,12 @@ describe('B2B Bulk Pricing & South African VAT Engine', () => {
   });
 
   it('calculates 15% volume discount for 24-unit pack tier', () => {
-    const pricing = calculateBulkTierDiscount(baseUnitPrice, 24, 2);
-    expect(pricing.totalUnits).toBe(48);
+    const pricing = calculateBulkTierDiscount(baseUnitPrice, 24, 1);
+    expect(pricing.totalUnits).toBe(24);
     expect(pricing.discountRate).toBe(0.15);
-    expect(pricing.grossAmount).toBe(21600.0);
-    expect(pricing.discountAmount).toBe(3240.0);
-    expect(pricing.netAmount).toBe(18360.0);
+    expect(pricing.grossAmount).toBe(10800.0);
+    expect(pricing.discountAmount).toBe(1620.0);
+    expect(pricing.netAmount).toBe(9180.0);
   });
 
   it('calculates 25% maximum volume discount for 48-unit master crate tier', () => {

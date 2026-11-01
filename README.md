@@ -1,38 +1,52 @@
-# MedFlow Distribution — Standalone Demo Edition (Mock Data)
+# MedFlow Distribution — Enterprise Edition
 
-> **Branch:** `main-dummy`  
-> **Notice:** This branch contains the fully self-contained, mock-data-filled version of Project MedFlow. It runs completely offline with zero external database dependencies to guarantee smooth, uninterrupted presentations and grading demonstrations.
+### INSY7315 Work Integrated Learning (WIL) — Task 2 Implementation
+**Academic Institution:** IIE Emeris University / University Consortium  
+**Module:** INSY7315 Work Integrated Learning 3  
+**Client Entity:** Thomas — Licensed CBD & Homeopathic Bulk Distributor (Rolling Stoned Natural Health)  
+**Enterprise Solution:** Project MedFlow Integrated Distribution Management Platform  
+**Lead Engineer (Role 1):** Tashiel Singh (Frontend & DevOps / CI-CD Lead)
 
 ---
 
-## 🔑 Dummy Logins for Demonstration
+## 🔑 Stakeholder Logins for Demonstration (7 Roles)
 
 Use any of the following pre-configured credentials to access the platform. All roles share the universal demo password **`password123`**.
 
 | Stakeholder Role | Name & Organization | Email / Username | Password | Landing Page & Key Capabilities |
 | :--- | :--- | :--- | :--- | :--- |
-| **Distributor** *(Admin)* | **Thomas**<br>MedFlow Distribution Head | `thomas@medflowdistribution.co.za` | `password123` | **`/dashboard`**<br>• Executive KPIs & Revenue segregation (70% Bulk / 30% Retail)<br>• SARS Section 11(e) wear-and-tear tax depreciation engine<br>• Dual-pool stock transfer & compliance audit trail<br>• Tax invoice generation & client ledger |
-| **Pharmacy** *(B2B Client)* | **Sr. Eleanor Scott**<br>MedCentre Health Sandton | `eleanor.scott@medcentre.co.za` | `password123` | **`/inventory`** & **`/orders/new`**<br>• B2B bulk wholesale catalog & stock reserves<br>• Automated wholesale volume discount tiers (10%, 15%, 25%)<br>• Real-time credit facility monitoring (R150,000 limit)<br>• 15% VAT breakdown and order submission |
+| **Distributor** *(Admin)* | **Thomas**<br>MedFlow Distribution Head | `thomas@medflowdistribution.co.za` | `password123` | **`/dashboard`**<br>• Executive KPIs & Revenue segregation (70% Bulk / 30% Retail)<br>• SARS Section 11(e) wear-and-tear tax depreciation engine<br>• Dual-pool stock transfer & compliance audit trail<br>• Stochastic Growth & Kelly Engine |
+| **Pharmacy** *(B2B Client)* | **Sr. Eleanor Scott**<br>MedCentre Health Sandton | `eleanor.scott@medcentre.co.za` | `password123` | **`/orders/new`** & **`/inventory`**<br>• B2B bulk wholesale catalog & stock reserves<br>• Automated wholesale volume discount tiers (10%, 15%, 25%)<br>• Real-time credit facility monitoring (R150,000 limit)<br>• 15% VAT breakdown and order submission |
+| **Pharmacist** *(Dispensary)* | **Tariq Moodley**<br>St. Marys Hospital Dispensary | `tariq.moodley@medflowdispensary.co.za` | `password123` | **`/pharmacist-portal`**<br>• HPCSA Reg: PH0284711<br>• Automated 8.5% referral commission tracking card<br>• Patient intake log & referral commission ledger |
+| **Doctor** *(Clinical)* | **Dr. Hendrik van der Merwe**<br>Cape Integrative Practice | `dr.hendrik@capewellness.co.za` | `password123` | **`/prescriber-portal`**<br>• HPCSA Reg: MP0492819<br>• Clinical condition tagging (Pain, Anxiety, Insomnia)<br>• Digital prescription issuance & outcome monitoring |
+| **Psychiatrist** *(Mental Health)* | **Dr. Marcus Vance**<br>Mind Health Institute | `dr.marcus@mindhealthinstitute.co.za` | `password123` | **`/prescriber-portal`**<br>• HPCSA Reg: MP0821944<br>• Mental health condition tagging (PTSD, Panic, Stress)<br>• Botanical Schedule 4 regimens |
 | **Patient** *(Chronic Care)* | **Sarah Meyer**<br>Registered Chronic Patient | `sarah.meyer@wellnessmail.co.za` | `password123` | **`/patient-portal`**<br>• Chronic medical CBD & homeopathic prescriptions<br>• Prescribed dosing schedules & doctor notes<br>• One-click 30-day prescription refill simulation |
+| **Leisure Client** *(Wellness)* | **Chloe Bennett**<br>Lifestyle & Wellness Member | `chloe.bennett@lifestylemail.co.za` | `password123` | **`/leisure-portal`**<br>• Lifestyle & wellness botanical retail catalog<br>• Holistic practitioner consultation booking<br>• Personalized natural regimen tracking |
 
-> 💡 **Quick Login Tip:** On the Login page (`/login`), you can click the quick-select stakeholder buttons at the top to automatically populate the credentials and test any role instantly.  
-> Alternate test aliases (`owner@medflow.test` for Distributor, `stmarys@medflow.test` for Pharmacy) are also supported.
+> 💡 **Quick Login Tip:** On the Login page (`/login`), you can click any of the 7 quick-select stakeholder buttons at the top to automatically populate the credentials and test any role instantly.
 
 ---
 
-## 🚀 Running the Demo Locally
+## 🚀 Running the Application Locally
 
 1. **Install Dependencies:**
    ```bash
    npm install
    ```
 
-2. **Start the Development Server:**
+2. **Start the Frontend Development Server:**
    ```bash
    npm run dev
    ```
 
-3. **Open in Browser:**
+3. **Start the Express Backend API (Optional):**
+   ```bash
+   cd backend
+   npm install
+   npm run dev
+   ```
+
+4. **Open in Browser:**
    Navigate to [http://localhost:5173](http://localhost:5173) and log in using any credentials from the table above.
 
 ---

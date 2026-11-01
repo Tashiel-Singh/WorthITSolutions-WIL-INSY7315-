@@ -1,7 +1,4 @@
-/**
- * Multi-Channel Revenue Segregation & Profitability Engine
- * Formulated from Role 2 ERP specifications with channel margin analysis.
- */
+import { fromCents, toCents } from '../lib/money';
 
 export type ChannelName = 'PATIENT' | 'PHARMACY' | 'LEISURE';
 
@@ -33,75 +30,78 @@ export interface RevenueBreakdown {
   referralCommissionsAccrued: number;
 }
 
+const CHANNELS: ChannelName[] = ['PATIENT', 'PHARMACY', 'LEISURE'];
+
 export class RevenueSegregationService {
-  // Baseline supply chain cost-basis: 42% for B2B Bulk, 35% for Retail OTC, 30% for Leisure consultations
   private static readonly DEFAULT_COGS_RATIOS: Record<ChannelName, number> = {
     PHARMACY: 0.42,
     PATIENT: 0.35,
     LEISURE: 0.30,
   };
 
-  private static readonly PHARMACIST_COMMISSION_RATE = 0.085; // 8.5% statutory referral fee
+  private static readonly PHARMACIST_COMMISSION_RATE = 0.085;
 
-  public aggregateRevenueByChannel(records: SalesRecord[]): RevenueBreakdown {
-    const byChannel: Record<ChannelName, ChannelMarginMetrics> = {
-      PATIENT: { revenue: 0, bulkRevenue: 0, units: 0, cogs: 0, grossProfit: 0, grossMarginPct: 0 },
-      PHARMACY: { revenue: 0, bulkRevenue: 0, units: 0, cogs: 0, grossProfit: 0, grossMarginPct: 0 },
-      LEISURE: { revenue: 0, bulkRevenue: 0, units: 0, cogs: 0, grossProfit: 0, grossMarginPct: 0 },
+  aggregateRevenueByChannel(records: SalesRecord[]): RevenueBreakdown {
+    if (!Array.isArray(records)) throw new TypeError('records must be an array');
+
+    const acc: Record<ChannelName, { revenue: number; bulkRevenue: number; units: number; cogs: number }> = {
+      PATIENT: { revenue: 0, bulkRevenue: 0, units: 0, cogs: 0 },
+      PHARMACY: { revenue: 0, bulkRevenue: 0, units: 0, cogs: 0 },
+      LEISURE: { revenue: 0, bulkRevenue: 0, units: 0, cogs: 0 },
     };
 
-    let totalRevenue = 0;
-    let totalBulkRevenue = 0;
-    let totalCogs = 0;
-
     for (const r of records) {
-      const channel = r.channel;
-      if (!byChannel[channel]) continue;
+      const c = acc[r.channel];
+      if (!c) throw new RangeError(`Unknown revenue channel: ${String(r.channel)}`);
 
-      const amt = Number(r.amount) || 0;
-      const bulkAmt = Number(r.bulkRevenue) || 0;
-      const qty = Number(r.quantity) || 0;
-      const cogs = r.costBasis !== undefined ? r.costBasis : amt * RevenueSegregationService.DEFAULT_COGS_RATIOS[channel];
+      const revCents = toCents(r.amount);
+      const bulkCents = toCents(r.bulkRevenue);
+      const cogsCents = r.costBasis !== undefined
+        ? toCents(r.costBasis)
+        : Math.round(revCents * RevenueSegregationService.DEFAULT_COGS_RATIOS[r.channel]);
 
-      byChannel[channel].revenue += amt;
-      byChannel[channel].bulkRevenue += bulkAmt;
-      byChannel[channel].units += qty;
-      byChannel[channel].cogs += cogs;
-
-      totalRevenue += amt;
-      totalBulkRevenue += bulkAmt;
-      totalCogs += cogs;
+      c.revenue += revCents;
+      c.bulkRevenue += bulkCents;
+      c.units += r.quantity;
+      c.cogs += cogsCents;
     }
 
-    // Compute gross profit & margin percentages per channel
-    for (const ch of ['PATIENT', 'PHARMACY', 'LEISURE'] as ChannelName[]) {
-      const metrics = byChannel[ch];
-      metrics.revenue = Math.round(metrics.revenue * 100) / 100;
-      metrics.bulkRevenue = Math.round(metrics.bulkRevenue * 100) / 100;
-      metrics.cogs = Math.round(metrics.cogs * 100) / 100;
-      metrics.grossProfit = Math.round((metrics.revenue - metrics.cogs) * 100) / 100;
-      metrics.grossMarginPct = metrics.revenue > 0
-        ? Math.round((metrics.grossProfit / metrics.revenue) * 1000) / 10
-        : 0;
+    let totalC = 0;
+    let bulkC = 0;
+    let cogsC = 0;
+
+    const byChannel = {} as RevenueBreakdown['byChannel'];
+    for (const ch of CHANNELS) {
+      const chRev = acc[ch].revenue;
+      const chBulk = acc[ch].bulkRevenue;
+      const chCogs = acc[ch].cogs;
+      const chProfit = chRev - chCogs;
+      const chMarginPct = chRev > 0 ? Math.round((chProfit / chRev) * 1000) / 10 : 0;
+
+      totalC += chRev;
+      bulkC += chBulk;
+      cogsC += chCogs;
+
+      byChannel[ch] = {
+        revenue: fromCents(chRev),
+        bulkRevenue: fromCents(chBulk),
+        units: acc[ch].units,
+        cogs: fromCents(chCogs),
+        grossProfit: fromCents(chProfit),
+        grossMarginPct: chMarginPct,
+      };
     }
 
-    totalRevenue = Math.round(totalRevenue * 100) / 100;
-    totalBulkRevenue = Math.round(totalBulkRevenue * 100) / 100;
-    totalCogs = Math.round(totalCogs * 100) / 100;
-    const totalGrossProfit = Math.round((totalRevenue - totalCogs) * 100) / 100;
-    const overallGrossMarginPct = totalRevenue > 0
-      ? Math.round((totalGrossProfit / totalRevenue) * 1000) / 10
-      : 0;
-
-    // Pharmacist referral commission on chronic patient prescriptions
-    const referralCommissionsAccrued = Math.round(byChannel.PATIENT.revenue * RevenueSegregationService.PHARMACIST_COMMISSION_RATE * 100) / 100;
+    const totalGrossProfit = fromCents(totalC - cogsC);
+    const overallGrossMarginPct = totalC > 0 ? Math.round(((totalC - cogsC) / totalC) * 1000) / 10 : 0;
+    const referralCommissionsAccrued = Math.round(fromCents(acc.PATIENT.revenue) * RevenueSegregationService.PHARMACIST_COMMISSION_RATE * 100) / 100;
 
     return {
       byChannel,
-      totalRevenue,
-      totalBulkRevenue,
-      retailRevenue: Math.round((totalRevenue - totalBulkRevenue) * 100) / 100,
-      totalCogs,
+      totalRevenue: fromCents(totalC),
+      totalBulkRevenue: fromCents(bulkC),
+      retailRevenue: fromCents(totalC - bulkC),
+      totalCogs: fromCents(cogsC),
       totalGrossProfit,
       overallGrossMarginPct,
       referralCommissionsAccrued,

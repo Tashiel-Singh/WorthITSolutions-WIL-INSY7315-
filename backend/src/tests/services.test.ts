@@ -2,15 +2,16 @@ import { BulkOrderCalculationService } from '../services/BulkOrderCalculationSer
 import { FormalTaxDeductionService } from '../services/FormalTaxDeductionService';
 import { RevenueSegregationService } from '../services/RevenueSegregationService';
 import { InventoryService, InventoryError } from '../services/InventoryService';
-import { TaxCalculator, DepreciationStrategy, OperatingExpenseStrategy, BulkVatInputStrategy } from '../services/TaxStrategies';
+import { TaxCalculator, DepreciationStrategy } from '../services/TaxStrategies';
+import { fromCents } from '../lib/money';
 
 describe('Role 2 ERP Core Services (Pseudo-Merged Architecture)', () => {
   it('bulk discount tiers + 15% VAT split', () => {
     const r = new BulkOrderCalculationService().processBulkOrder(100, 24);
-    expect(r.discountRate).toBe(0.1);
-    expect(r.subtotalExVat).toBe(2160);
-    expect(r.vatAmount).toBe(324);
-    expect(r.totalInclVat).toBe(2484);
+    expect(r.discountRate).toBe(0.15);
+    expect(r.subtotalExVat).toBe(2040);
+    expect(r.vatAmount).toBe(306);
+    expect(r.totalInclVat).toBe(2346);
   });
 
   it('tax formula with Strategy pattern: assets*0.20 + expenses*0.15 + bulk*0.05', () => {
@@ -24,7 +25,7 @@ describe('Role 2 ERP Core Services (Pseudo-Merged Architecture)', () => {
   it('custom TaxCalculator executes strategy pattern dynamically', () => {
     const calc = new TaxCalculator([new DepreciationStrategy(0.25)]);
     const res = calc.calculate({ assets: [{ cost: 1000 }], expenses: [], bulkRevenue: 0 });
-    expect(res.totalDeduction).toBe(250);
+    expect(fromCents(res.totalCents)).toBe(250);
   });
 
   it('revenue aggregates by channel with margin and referral tracking', () => {

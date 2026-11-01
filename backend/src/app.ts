@@ -15,12 +15,10 @@ import { patientsRouter } from './routes/patients';
 import { growthRouter } from './routes/growth';
 
 export const app = express();
-app.set('trust proxy', 1); // behind Azure Front Door
-
-app.use(helmet());
-app.use(express.json());
-
+app.set('trust proxy', 1); // behind the hosting platform proxy (Render)
+const isProduction = process.env.NODE_ENV === 'production';
 const allowedOrigins = env.corsOrigin.split(',').map((s) => s.trim()).filter(Boolean);
+app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
 app.use(
   cors({
     origin: (origin, callback) => {
@@ -28,20 +26,17 @@ app.use(
       if (!origin) return callback(null, true);
       if (
         allowedOrigins.includes(origin) ||
-        allowedOrigins.includes('*') ||
-        origin.endsWith('.onrender.com') ||
-        origin.endsWith('.github.io') ||
-        origin.includes('localhost') ||
-        origin.includes('127.0.0.1')
+        (!isProduction && (origin.startsWith('http://localhost') || origin.startsWith('http://127.0.0.1')))
       ) {
         return callback(null, true);
       }
-      return callback(null, true); // Permissive fallback for assessment demo
+      return callback(null, false); // origin not on the CORS_ORIGIN list: no CORS headers are sent
     },
     credentials: true,
   })
 );
 app.use(rateLimit({ windowMs: 60_000, limit: 300, standardHeaders: true, legacyHeaders: false }));
+app.use(express.json({ limit: '100kb' }));
 
 app.get('/health', (_req, res) => res.json({ status: 'ok' }));
 

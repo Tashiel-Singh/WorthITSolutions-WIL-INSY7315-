@@ -41,6 +41,7 @@ invoicesRouter.post('/:id/payments', requireRole('OWNER'), validate(idParam, 'pa
     const inv = await tx.invoice.findUnique({ where: { id: req.params.id }, include: { payments: true } });
     if (!inv) throw new HttpError(404, 'Invoice not found');
     if (inv.status === 'PAID') throw new HttpError(409, 'Invoice is already paid');
+    if (inv.status === 'VOID') throw new HttpError(409, 'Invoice has been voided');
     const paidSoFar = inv.payments.reduce((s, p) => s.add(p.amountPaid), new Prisma.Decimal(0));
     const amount = new Prisma.Decimal(req.body.amountPaid);
     if (paidSoFar.add(amount).gt(inv.totalAmount)) throw new HttpError(422, 'Payment exceeds outstanding balance');
