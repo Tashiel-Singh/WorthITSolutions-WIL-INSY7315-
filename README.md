@@ -11,7 +11,7 @@
 ---
 
 ### INSY7315 Work Integrated Learning (WIL) — Task 2 Implementation
-**Academic Institution:** IIE Varsity College / University Consortium  
+**Academic Institution:** IIE Emeris University / University Consortium  
 **Module:** INSY7315 Work Integrated Learning 3  
 **Client Entity:** Thomas — Licensed CBD & Homeopathic Bulk Distributor (Rolling Stoned Natural Health)  
 **Enterprise Solution:** Project MedFlow Integrated Distribution Management Platform  
