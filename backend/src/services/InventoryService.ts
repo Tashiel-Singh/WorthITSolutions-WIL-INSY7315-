@@ -58,3 +58,4 @@ export class InventoryService {
     this.stockPools = pools;
   }
 }
+

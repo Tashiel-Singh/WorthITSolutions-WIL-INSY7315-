@@ -118,3 +118,4 @@ export const defaultTaxStrategies = (): ITaxStrategy[] => [
   new OperatingExpenseStrategy(),
   new BulkVatInputStrategy(),
 ];
+
