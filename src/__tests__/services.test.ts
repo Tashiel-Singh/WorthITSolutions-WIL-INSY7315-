@@ -1,5 +1,8 @@
-import { TaxCalculationService, StandardVATStrategy, WholesaleTaxStrategy, TaxCalculationError } from '../services/TaxCalculationService';
-import { InventoryService, InventoryError } from '../services/InventoryService';
+import { TaxCalculationService, StandardVATStrategy, WholesaleTaxStrategy, TaxCalculationError } from '../services/TaxCalculationService.js';
+import { InventoryService, InventoryError } from '../services/InventoryService.js';
+import { FormalTaxDeductionService } from '../services/FormalTaxDeductionService.js';
+import { RevenueSegregationService } from '../services/RevenueSegregationService.js';
+import { BulkOrderCalculationService } from '../services/BulkOrderCalculationService.js';
 
 describe('TaxCalculationService', () => {
   it('calculates standard VAT', () => {
@@ -38,9 +41,7 @@ describe('InventoryService', () => {
   });
 });
 
-import { FormalTaxDeductionService } from '../services/FormalTaxDeductionService';
-import { RevenueSegregationService } from '../services/RevenueSegregationService';
-import { BulkOrderCalculationService } from '../services/BulkOrderCalculationService';
+
 
 describe('Sprint Logic Expansion Services', () => {
   it('calculates formal multi-variable tax deduction', () => {
