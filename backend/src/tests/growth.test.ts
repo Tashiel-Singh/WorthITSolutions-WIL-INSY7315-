@@ -36,3 +36,4 @@ describe('GrowthEngineService (Stochastic Capital Velocity & Kelly Engine)', () 
     expect(lowVol.optimalKellyAllocationPct).toBeGreaterThan(highVol.optimalKellyAllocationPct);
   });
 });
+

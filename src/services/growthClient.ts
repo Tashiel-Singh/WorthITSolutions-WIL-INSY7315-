@@ -68,3 +68,4 @@ export async function fetchGrowthSimulation(params: StochasticParams): Promise<Q
 
   return GrowthEngineService.modelStochasticVelocity(params);
 }
+

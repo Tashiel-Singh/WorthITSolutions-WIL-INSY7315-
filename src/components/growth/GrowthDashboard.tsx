@@ -146,11 +146,10 @@ export function GrowthDashboard() {
                   key={p.id}
                   type="button"
                   onClick={() => applyPreset(p.id as any)}
-                  className={`text-xs py-2 px-3 rounded-lg border font-medium transition-all ${
-                    selectedPreset === p.id
+                  className={`text-xs py-2 px-3 rounded-lg border font-medium transition-all ${selectedPreset === p.id
                       ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
                       : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200'
-                  }`}
+                    }`}
                 >
                   {p.label}
                 </button>
