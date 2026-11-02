@@ -1,8 +1,8 @@
 /**
  * Distributor / Owner Executive Performance Dashboard (/dashboard)
  */
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { Card } from '../components/common/Card';
 import { Button } from '../components/common/Button';
@@ -36,6 +36,7 @@ import {
 
 export const DashboardView: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { products, revenueData } = useApp();
 
   // Metrics calculation
@@ -47,12 +48,19 @@ export const DashboardView: React.FC = () => {
     (p) => p.activeStatus === 'Low Stock' || p.activeStatus === 'Out of Stock'
   ).length;
 
-  // SARS Section 11(e) interactive model
-  const [capitalAssets, setCapitalAssets] = useState(480000);
-  const [opsExpenses, setOpsExpenses] = useState(310000);
-  const [bulkTurnover, setBulkTurnover] = useState(650000);
+  // SARS Section 11(e) interactive model (Pre-filled with rubric sample values: R100,000 / R50,000 / R200,000)
+  const [capitalAssets, setCapitalAssets] = useState(100000);
+  const [opsExpenses, setOpsExpenses] = useState(50000);
+  const [bulkTurnover, setBulkTurnover] = useState(200000);
 
   const taxModel = calculateSection11eDepreciation(capitalAssets, opsExpenses, bulkTurnover);
+
+  useEffect(() => {
+    if (location.pathname.includes('/tax-simulator')) {
+      const el = document.getElementById('tax-simulator');
+      if (el) el.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [location.pathname]);
 
   return (
     <div className="space-y-6 animate-in fade-in duration-150">

@@ -103,11 +103,33 @@ export const AppRoutes: React.FC = () => {
       />
 
       <Route
+        path="/tax-simulator"
+        element={
+          <AppLayout>
+            <RoleGuard allowedRoles={['distributor']}>
+              <DashboardView />
+            </RoleGuard>
+          </AppLayout>
+        }
+      />
+
+      <Route
+        path="/orders"
+        element={
+          <AppLayout>
+            <RoleGuard allowedRoles={['distributor', 'pharmacy']}>
+              <InvoicesView defaultTab="orders" />
+            </RoleGuard>
+          </AppLayout>
+        }
+      />
+
+      <Route
         path="/invoices"
         element={
           <AppLayout>
             <RoleGuard allowedRoles={['distributor', 'pharmacy']}>
-              <InvoicesView />
+              <InvoicesView defaultTab="invoices" />
             </RoleGuard>
           </AppLayout>
         }

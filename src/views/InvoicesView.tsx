@@ -19,11 +19,11 @@ import {
   X,
 } from 'lucide-react';
 
-export const InvoicesView: React.FC = () => {
+export const InvoicesView: React.FC<{ defaultTab?: 'orders' | 'invoices' }> = ({ defaultTab = 'orders' }) => {
   const { orders, invoices, updateOrderStatus } = useApp();
   const { showToast } = useToast();
 
-  const [activeTab, setActiveTab] = useState<'orders' | 'invoices'>('orders');
+  const [activeTab, setActiveTab] = useState<'orders' | 'invoices'>(defaultTab);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
