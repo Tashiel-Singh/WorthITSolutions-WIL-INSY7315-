@@ -8,6 +8,8 @@ dist-ssr/
 .env.*
 !.env.example
 *.zip
+!MedFlow-Standalone-Demo.zip
+!MedFlow-Standalone-Demo/**
 infra/secrets.*
 
 # Test coverage & build caches

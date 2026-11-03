@@ -51,6 +51,25 @@ Use any of the following pre-configured credentials to access the platform. All 
 
 ---
 
+## 🚀 1-Click Desktop Launcher & Standalone Presentation Package
+
+For presentations and examiner demonstrations, a completely zero-dependency standalone build is available that runs offline with **zero configuration or server setup**:
+
+1. **Launch Directly from Desktop Shortcut:**
+   - Double-click the **`MedFlow Demo`** desktop shortcut icon generated on your Windows desktop.
+   - Or double-click [`Launch-MedFlow-Demo.bat`](./Launch-MedFlow-Demo.bat) in the project root.
+   - Launches in distraction-free Native App Mode (`--app=http://127.0.0.1:4173`) with custom MedFlow branding.
+
+2. **Generate Desktop Icon on Any Machine:**
+   - Run [`Create-Desktop-Shortcut.bat`](./Create-Desktop-Shortcut.bat) to instantly place the **`MedFlow Demo`** icon with high-resolution iconography (`medflow.ico`) onto the Windows Desktop.
+
+3. **Portable Offline Transfer Package (`MedFlow-Standalone-Demo.zip`):**
+   - Download or transfer [`MedFlow-Standalone-Demo.zip`](./MedFlow-Standalone-Demo.zip) (~310 KB) onto any presentation laptop or USB flash drive.
+   - Unzip anywhere and double-click `Launch-MedFlow-Demo.bat`.
+   - Requires **no Node.js, no npm, and no database** — automatically boots using the built-in Windows PowerShell HTTP engine if Node is not present.
+
+---
+
 ## 🔄 Resetting Demo State
 
-If you submit test orders, transfer stock, or request refills during a presentation, you can restore all mock data back to its pristine default seed state at any time by clicking the **"Reset Data"** button in the top navigation bar.
+If you submit test orders, transfer stock, or request refills during a presentation, you can restore all mock data back to its pristine default seed state at any time by pressing **`Ctrl + Shift + R`** or clicking the **"Reset Demo State"** button in the top navigation bar.
